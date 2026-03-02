@@ -5,6 +5,7 @@ import { PRODUCTS } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
+import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -12,6 +13,7 @@ export function CheckoutPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!result) navigate('/', { replace: true });
@@ -20,22 +22,48 @@ export function CheckoutPage() {
   useEffect(() => {
     if (result && !selectedProduct) {
       const recommended =
-        result?.level === 'panic'
+        result.level === 'panic'
           ? PRODUCTS.find((p) => p.id === 'support')
-          : result?.level === 'generalized'
+          : result.level === 'generalized'
           ? PRODUCTS.find((p) => p.id === 'course')
           : PRODUCTS.find((p) => p.id === 'basic');
       if (recommended) setSelectedProduct(recommended);
     }
   }, [result, selectedProduct, setSelectedProduct]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!selectedProduct || !name || !email) return;
+
     setIsSubmitting(true);
-    await new Promise<void>((resolve) => setTimeout(resolve, 1500));
-    navigate('/thank-you');
+    setError(null);
+
+    // Products without a fixed price (e.g. "Підтримка 7 днів") go directly
+    // to the thank-you page — operator will contact the customer manually.
+    if (selectedProduct.price === null) {
+      navigate('/thank-you');
+      return;
+    }
+
+    try {
+      await redirectToLiqPay({
+        amount: selectedProduct.price,
+        description: `${selectedProduct.title} — тривога.net`,
+        orderId: generateOrderId(selectedProduct.id),
+        customerName: name,
+        customerEmail: email,
+      });
+      // Browser navigates away to LiqPay — execution stops here.
+      // On return, LiqPay redirects to result_url (/thank-you).
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : 'Помилка при переході до оплати',
+      );
+      setIsSubmitting(false);
+    }
   }
+
+  const isPriceless = selectedProduct?.price === null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -77,27 +105,29 @@ export function CheckoutPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#f5a623]/50 transition-colors"
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#f5a623]/50 transition-colors"
             />
 
-            <div className="bg-white/5 border border-white/10 rounded-xl p-3 text-white/30 text-sm text-center">
-              💳 Поле для введення картки (Stripe/LiqPay інтеграція)
-            </div>
+            {error && (
+              <p className="text-[#e53e3e] text-sm text-center">{error}</p>
+            )}
 
             <Button
               type="submit"
-              variant="primary"
+              variant={isPriceless ? 'ghost' : 'primary'}
               size="lg"
               fullWidth
               disabled={!selectedProduct || !name || !email || isSubmitting}
             >
               {isSubmitting
-                ? 'Обробка...'
-                : `Оплатити${selectedProduct?.price ? ` ${selectedProduct.price} грн` : ''}`}
+                ? 'Переходимо до оплати...'
+                : isPriceless
+                ? 'Залишити заявку'
+                : `Оплатити через LiqPay ${selectedProduct?.price ? `${selectedProduct.price} грн` : ''}`}
             </Button>
 
             <p className="text-center text-white/30 text-xs">
-              Це не медпослуга. Не замінює звернення до лікаря.
+              Оплата захищена LiqPay. Це не медпослуга. Не замінює звернення до лікаря.
             </p>
           </form>
         </div>
