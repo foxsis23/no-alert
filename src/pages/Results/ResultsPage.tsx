@@ -1,17 +1,32 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
-import type { AnxietyLevel } from '../../types/quiz';
+import type { AnxietyType } from '../../types/quiz';
 
-const LEVEL_COLORS: Record<AnxietyLevel, { badge: string; bar: string }> = {
-  situational: { badge: 'bg-green-500/20 text-green-400 border-green-500/30', bar: 'bg-green-400' },
-  generalized: { badge: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30', bar: 'bg-yellow-400' },
-  panic: { badge: 'bg-red-500/20 text-red-400 border-red-500/30', bar: 'bg-red-400' },
+const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
+  panic_cycle: {
+    badge: 'bg-red-500/15 text-red-400 border-red-500/30',
+    dot: 'bg-red-400',
+  },
+  hypervigilance: {
+    badge: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
+    dot: 'bg-orange-400',
+  },
+  catastrophizing: {
+    badge: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+    dot: 'bg-yellow-400',
+  },
+  background_anxiety: {
+    badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+    dot: 'bg-blue-400',
+  },
+  overload: {
+    badge: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
+    dot: 'bg-purple-400',
+  },
 };
-
-const MAX_SCORE = 24;
 
 export function ResultsPage() {
   const navigate = useNavigate();
@@ -23,13 +38,7 @@ export function ResultsPage() {
 
   if (!result) return null;
 
-  const colors = LEVEL_COLORS[result.level];
-  const scorePercent = Math.round((result.score / MAX_SCORE) * 100);
-  const [animatedWidth, setAnimatedWidth] = useState(0);
-
-  useEffect(() => {
-    requestAnimationFrame(() => setAnimatedWidth(scorePercent));
-  }, [scorePercent]);
+  const colors = TYPE_COLORS[result.type];
 
   function handleRestart() {
     reset();
@@ -40,51 +49,73 @@ export function ResultsPage() {
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
       <Header />
 
-      <main className="flex-1 flex flex-col items-center justify-center px-6 py-24">
-        <div className="w-full max-w-lg flex flex-col gap-8 text-center">
+      <main className="flex-1 flex flex-col items-center px-6 py-24">
+        <div className="w-full max-w-lg flex flex-col gap-8">
           {/* Badge */}
-          <div>
+          <div className="text-center">
             <span
-              className={`inline-block px-4 py-1.5 rounded-full text-sm font-semibold border ${colors.badge}`}
+              className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold border ${colors.badge}`}
             >
+              <span className={`w-2 h-2 rounded-full ${colors.dot}`} />
               Твій результат
             </span>
           </div>
 
-          {/* Anxiety type title */}
-          <h1 className="text-4xl font-black text-white">{result.title}</h1>
+          {/* Title */}
+          <h1 className="text-4xl font-black text-white text-center">{result.title}</h1>
 
-          {/* Score bar */}
-          <div className="flex flex-col gap-2">
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full transition-all duration-1000 ease-out ${colors.bar}`}
-                style={{ width: `${animatedWidth}%` }}
-              />
-            </div>
-            <p className="text-xs text-white/40">Рівень тривоги: {result.score}/{MAX_SCORE}</p>
-          </div>
-
-          {/* Description */}
-          <p className="text-white/70 text-base leading-relaxed">
-            {result.description}
-          </p>
-
-          {/* Recommendation box */}
-          <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-left">
-            <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
-            <p className="text-white/90 text-base">{result.recommendation}</p>
-          </div>
-
-          {/* CTAs */}
+          {/* Free preview phrases */}
           <div className="flex flex-col gap-3">
-            <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/checkout')}>
-              Отримати допомогу
-            </Button>
-            <Button variant="ghost" size="md" fullWidth onClick={handleRestart}>
-              Пройти ще раз
-            </Button>
+            {result.previewPhrases.map((phrase, i) => (
+              <div
+                key={i}
+                className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white/80 text-base leading-relaxed"
+              >
+                {phrase}
+              </div>
+            ))}
           </div>
+
+          {/* Paywall section */}
+          <div className="relative rounded-2xl overflow-hidden border border-white/10">
+            {/* Blurred content behind the gate */}
+            <div
+              className="flex flex-col gap-4 p-5 pointer-events-none select-none"
+              style={{ filter: 'blur(6px)' }}
+              aria-hidden="true"
+            >
+              <p className="text-white/70 text-base leading-relaxed">
+                Детальний опис твого типу тривоги та причини його появи. Що відбувається в нервовій
+                системі і чому симптоми саме такі.
+              </p>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
+                <p className="text-white/90 text-base">
+                  Персоналізований план дій на основі твого типу тривоги.
+                </p>
+              </div>
+            </div>
+
+            {/* Overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/80 to-transparent flex flex-col items-center justify-end pb-6 px-5 gap-3">
+              <p className="text-white/60 text-sm text-center">
+                Повний аналіз + персональний план дій
+              </p>
+              <Button
+                variant="primary"
+                size="lg"
+                fullWidth
+                onClick={() => navigate('/checkout')}
+              >
+                Розблокувати — від 29 грн
+              </Button>
+            </div>
+          </div>
+
+          {/* Restart */}
+          <Button variant="ghost" size="md" fullWidth onClick={handleRestart}>
+            Пройти ще раз
+          </Button>
         </div>
       </main>
     </div>

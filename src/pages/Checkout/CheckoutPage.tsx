@@ -1,11 +1,20 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { PRODUCTS } from '../../data/products';
+import { PRODUCTS, getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
 import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
+import type { AnxietyType } from '../../types/quiz';
+
+const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {
+  panic_cycle: 'support_7_days',
+  hypervigilance: 'course',
+  catastrophizing: 'course',
+  background_anxiety: 'course',
+  overload: 'support_7_days',
+};
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -21,12 +30,8 @@ export function CheckoutPage() {
 
   useEffect(() => {
     if (result && !selectedProduct) {
-      const recommended =
-        result.level === 'panic'
-          ? PRODUCTS.find((p) => p.id === 'support')
-          : result.level === 'generalized'
-          ? PRODUCTS.find((p) => p.id === 'course')
-          : PRODUCTS.find((p) => p.id === 'basic');
+      const recommendedId = TYPE_TO_PRODUCT[result.type];
+      const recommended = getAllProducts().find((p) => p.id === recommendedId);
       if (recommended) setSelectedProduct(recommended);
     }
   }, [result, selectedProduct, setSelectedProduct]);
@@ -38,8 +43,6 @@ export function CheckoutPage() {
     setIsSubmitting(true);
     setError(null);
 
-    // Products without a fixed price (e.g. "Підтримка 7 днів") go directly
-    // to the thank-you page — operator will contact the customer manually.
     if (selectedProduct.price === null) {
       navigate('/thank-you');
       return;
@@ -53,8 +56,6 @@ export function CheckoutPage() {
         customerName: name,
         customerEmail: email,
       });
-      // Browser navigates away to LiqPay — execution stops here.
-      // On return, LiqPay redirects to result_url (/thank-you).
     } catch (err) {
       setError(
         err instanceof Error ? err.message : 'Помилка при переході до оплати',

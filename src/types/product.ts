@@ -7,4 +7,5 @@ export interface Product {
   description: string;
   isHighlighted: boolean;
   imagePlaceholder: string;
+  hasSupport: boolean;
 }
