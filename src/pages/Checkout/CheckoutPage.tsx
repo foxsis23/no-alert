@@ -5,7 +5,6 @@ import { PRODUCTS } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
-import type { Product } from '../../types/product';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -15,7 +14,11 @@ export function CheckoutPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!selectedProduct) {
+    if (!result) navigate('/', { replace: true });
+  }, [result, navigate]);
+
+  useEffect(() => {
+    if (result && !selectedProduct) {
       const recommended =
         result?.level === 'panic'
           ? PRODUCTS.find((p) => p.id === 'support')
@@ -25,10 +28,6 @@ export function CheckoutPage() {
       if (recommended) setSelectedProduct(recommended);
     }
   }, [result, selectedProduct, setSelectedProduct]);
-
-  function handleProductSelect(product: Product) {
-    setSelectedProduct(product);
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -40,7 +39,7 @@ export function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
-      <Header minimal />
+      <Header />
 
       <main className="flex-1 flex flex-col items-center px-6 py-24">
         <div className="w-full max-w-lg flex flex-col gap-8">
@@ -55,7 +54,7 @@ export function CheckoutPage() {
                 key={product.id}
                 product={product}
                 isSelected={selectedProduct?.id === product.id}
-                onSelect={() => handleProductSelect(product)}
+                onSelect={() => setSelectedProduct(product)}
               />
             ))}
           </div>

@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
@@ -25,6 +25,11 @@ export function ResultsPage() {
 
   const colors = LEVEL_COLORS[result.level];
   const scorePercent = Math.round((result.score / MAX_SCORE) * 100);
+  const [animatedWidth, setAnimatedWidth] = useState(0);
+
+  useEffect(() => {
+    requestAnimationFrame(() => setAnimatedWidth(scorePercent));
+  }, [scorePercent]);
 
   function handleRestart() {
     reset();
@@ -33,7 +38,7 @@ export function ResultsPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
-      <Header minimal />
+      <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg flex flex-col gap-8 text-center">
@@ -54,7 +59,7 @@ export function ResultsPage() {
             <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all duration-1000 ease-out ${colors.bar}`}
-                style={{ width: `${scorePercent}%` }}
+                style={{ width: `${animatedWidth}%` }}
               />
             </div>
             <p className="text-xs text-white/40">Рівень тривоги: {result.score}/{MAX_SCORE}</p>

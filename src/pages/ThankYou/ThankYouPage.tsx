@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
@@ -6,7 +7,11 @@ import { Footer } from '../../components/layout/Footer';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { selectedProduct, reset } = useQuizStore();
+  const { result, selectedProduct, reset } = useQuizStore();
+
+  useEffect(() => {
+    if (!result) navigate('/', { replace: true });
+  }, [result, navigate]);
 
   function handleRestart() {
     reset();
@@ -15,7 +20,7 @@ export function ThankYouPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
-      <Header minimal />
+      <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-24 text-center">
         <div className="w-full max-w-md flex flex-col gap-6">

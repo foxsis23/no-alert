@@ -25,6 +25,7 @@ export function QuestionCard({
           return (
             <button
               key={option.score}
+              aria-pressed={isSelected}
               onClick={() => onSelect(option.score)}
               className={`w-full py-4 px-6 rounded-xl border text-base font-medium transition-all duration-200 text-left
                 ${

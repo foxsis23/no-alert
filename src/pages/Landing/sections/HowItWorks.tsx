@@ -12,22 +12,22 @@ export function HowItWorks() {
           Як це працює
         </h2>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {STEPS.map((step, index) => (
-            <div key={step.step} className="flex sm:flex-col items-center gap-4 sm:gap-3 flex-1">
-              <div className="flex flex-col items-center gap-3">
+            <>
+              <div key={step.step} className="flex flex-col items-center gap-3 flex-1 max-w-[140px]">
                 <div className="w-16 h-16 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center text-2xl">
                   {step.icon}
                 </div>
-                <p className="text-sm text-white/70 text-center max-w-[120px]">
+                <p className="text-sm text-white/70 text-center leading-tight">
                   <span className="text-white/40">{step.step}. </span>
                   {step.label}
                 </p>
               </div>
               {index < STEPS.length - 1 && (
-                <div className="hidden sm:block text-white/30 text-2xl mx-2">→</div>
+                <div key={`arrow-${step.step}`} className="hidden sm:block text-white/30 text-2xl flex-shrink-0">→</div>
               )}
-            </div>
+            </>
           ))}
         </div>
 

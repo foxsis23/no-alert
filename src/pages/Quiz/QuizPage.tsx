@@ -21,7 +21,7 @@ export function QuizPage() {
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
-      <Header minimal />
+      <Header />
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 py-24">
         <div className="w-full max-w-lg flex flex-col gap-8">
