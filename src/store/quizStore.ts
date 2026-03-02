@@ -1,1 +1,59 @@
-export {};
+import { create } from 'zustand';
+import type { AnxietyResult } from '../types/quiz';
+import type { Product } from '../types/product';
+import { QUIZ_QUESTIONS } from '../data/questions';
+import { computeAnxietyResult } from '../data/anxietyTypes';
+
+interface QuizState {
+  answers: number[];
+  currentQuestion: number;
+  result: AnxietyResult | null;
+  selectedProduct: Product | null;
+}
+
+interface QuizActions {
+  setAnswer: (questionIndex: number, score: number) => void;
+  nextQuestion: () => void;
+  prevQuestion: () => void;
+  computeResult: () => void;
+  setSelectedProduct: (product: Product) => void;
+  reset: () => void;
+}
+
+const initialState: QuizState = {
+  answers: new Array(QUIZ_QUESTIONS.length).fill(-1),
+  currentQuestion: 0,
+  result: null,
+  selectedProduct: null,
+};
+
+export const useQuizStore = create<QuizState & QuizActions>((set, get) => ({
+  ...initialState,
+
+  setAnswer: (questionIndex, score) =>
+    set((state) => {
+      const answers = [...state.answers];
+      answers[questionIndex] = score;
+      return { answers };
+    }),
+
+  nextQuestion: () =>
+    set((state) => ({
+      currentQuestion: Math.min(state.currentQuestion + 1, QUIZ_QUESTIONS.length - 1),
+    })),
+
+  prevQuestion: () =>
+    set((state) => ({
+      currentQuestion: Math.max(state.currentQuestion - 1, 0),
+    })),
+
+  computeResult: () => {
+    const { answers } = get();
+    const total = answers.reduce((sum, a) => sum + (a === -1 ? 0 : a), 0);
+    set({ result: computeAnxietyResult(total) });
+  },
+
+  setSelectedProduct: (product) => set({ selectedProduct: product }),
+
+  reset: () => set(initialState),
+}));
