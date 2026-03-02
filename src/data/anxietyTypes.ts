@@ -71,7 +71,8 @@ export function computeAnxietyResult(answers: number[]): AnxietyResult {
   };
 
   QUIZ_QUESTIONS.forEach((q, i) => {
-    const answer = answers[i] === -1 ? 0 : answers[i];
+    const raw = answers[i];
+    const answer = raw === undefined || raw === -1 ? 0 : raw;
     (Object.keys(q.weights) as AnxietyType[]).forEach((type) => {
       scores[type] += answer * q.weights[type];
     });

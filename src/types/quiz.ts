@@ -19,7 +19,7 @@ export type AnxietyType =
 export interface AnxietyResult {
   type: AnxietyType;
   title: string;
-  previewPhrases: [string, string];
+  previewPhrases: readonly [string, string];
   description: string;
   recommendation: string;
   scores: Record<AnxietyType, number>;
