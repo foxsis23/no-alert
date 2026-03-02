@@ -1,6 +1,7 @@
 export interface QuizQuestion {
   id: number;
   text: string;
+  weights: Record<AnxietyType, number>;
 }
 
 export interface AnswerOption {
@@ -8,12 +9,18 @@ export interface AnswerOption {
   score: number;
 }
 
-export type AnxietyLevel = 'situational' | 'generalized' | 'panic';
+export type AnxietyType =
+  | 'panic_cycle'
+  | 'hypervigilance'
+  | 'catastrophizing'
+  | 'background_anxiety'
+  | 'overload';
 
 export interface AnxietyResult {
-  level: AnxietyLevel;
+  type: AnxietyType;
   title: string;
+  previewPhrases: [string, string];
   description: string;
   recommendation: string;
-  score: number;
+  scores: Record<AnxietyType, number>;
 }

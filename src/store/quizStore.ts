@@ -49,8 +49,7 @@ export const useQuizStore = create<QuizState & QuizActions>((set, get) => ({
 
   computeResult: () => {
     const { answers } = get();
-    const total = answers.reduce((sum, a) => sum + (a === -1 ? 0 : a), 0);
-    set({ result: computeAnxietyResult(total) });
+    set({ result: computeAnxietyResult(answers) });
   },
 
   setSelectedProduct: (product) => set({ selectedProduct: product }),
