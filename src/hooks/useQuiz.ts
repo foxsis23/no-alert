@@ -28,7 +28,7 @@ export function useQuiz() {
     if (!hasAnswer) return;
     if (isLastQuestion) {
       computeResult();
-      navigate('/results');
+      navigate('/result');
     } else {
       nextQuestion();
     }

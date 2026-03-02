@@ -18,7 +18,7 @@ export function ResultsPage() {
   const { result, reset } = useQuizStore();
 
   useEffect(() => {
-    if (!result) navigate('/quiz', { replace: true });
+    if (!result) navigate('/test', { replace: true });
   }, [result, navigate]);
 
   if (!result) return null;
@@ -33,7 +33,7 @@ export function ResultsPage() {
 
   function handleRestart() {
     reset();
-    navigate('/quiz');
+    navigate('/test');
   }
 
   return (
