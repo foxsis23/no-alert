@@ -10,7 +10,8 @@
       "Bash(git:*)",
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(pdftoppm:*)"
     ]
   }
 }

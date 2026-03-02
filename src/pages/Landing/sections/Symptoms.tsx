@@ -2,11 +2,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 
 const SYMPTOMS = [
-  { icon: '❤️', label: "Серце б'ється" },
-  { icon: '🫁', label: 'Важко вдихнути' },
-  { icon: '😰', label: 'Страх втратити контроль' },
-  { icon: '🌫️', label: 'Дереалізація' },
-  { icon: '🤢', label: 'Нудота' },
+  { icon: '\u2764\uFE0F', label: "Серце б'ється" },
+  { icon: '\u{1FAC1}', label: 'Важко вдихнути' },
+  { icon: '\u{1F630}', label: 'Страх втратити контроль' },
+  { icon: '\u{1F32B}\uFE0F', label: 'Дереалізація' },
+  { icon: '\u{1F922}', label: 'Нудота або тремор' },
+  { icon: '\u{1F4A4}', label: 'Постійне напруження' },
+  { icon: '\u{1F504}', label: 'Страх повторення' },
+  { icon: '\u{1F50D}', label: 'Перевірки тіла' },
 ];
 
 export function Symptoms() {
@@ -19,7 +22,7 @@ export function Symptoms() {
           Знайомі відчуття?
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
           {SYMPTOMS.map((symptom) => (
             <div
               key={symptom.label}
@@ -33,7 +36,7 @@ export function Symptoms() {
           ))}
         </div>
 
-        <Button variant="danger" size="lg" onClick={() => navigate('/quiz')}>
+        <Button variant="danger" size="lg" onClick={() => navigate('/test')}>
           Перевірити стан
         </Button>
       </div>

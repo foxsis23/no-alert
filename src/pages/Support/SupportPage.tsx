@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
+import { trackEvent } from '../../utils/analytics';
 
 const SCENARIOS = [
   {
@@ -31,6 +32,8 @@ export function SupportPage() {
   useEffect(() => {
     if (!selectedProduct || !selectedProduct.hasSupport) {
       navigate('/checkout', { replace: true });
+    } else {
+      trackEvent('enter_support');
     }
   }, [selectedProduct, navigate]);
 

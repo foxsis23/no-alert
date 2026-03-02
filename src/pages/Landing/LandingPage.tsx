@@ -3,6 +3,7 @@ import { Footer } from '../../components/layout/Footer';
 import { Hero } from './sections/Hero';
 import { Symptoms } from './sections/Symptoms';
 import { HowItWorks } from './sections/HowItWorks';
+import { Trust } from './sections/Trust';
 import { Pricing } from './sections/Pricing';
 
 export function LandingPage() {
@@ -13,6 +14,7 @@ export function LandingPage() {
         <Hero />
         <Symptoms />
         <HowItWorks />
+        <Trust />
         <Pricing />
       </main>
       <Footer />

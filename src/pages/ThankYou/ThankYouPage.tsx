@@ -5,6 +5,7 @@ import { UPSELL_MAP, getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { Footer } from '../../components/layout/Footer';
+import { trackEvent } from '../../utils/analytics';
 import type { Product } from '../../types/product';
 
 export function ThankYouPage() {
@@ -24,6 +25,7 @@ export function ThankYouPage() {
     .slice(0, 2);
 
   function handleUpsell(product: Product) {
+    trackEvent('upsell_purchase', { product_id: product.id });
     setSelectedProduct(product);
     navigate('/checkout');
   }

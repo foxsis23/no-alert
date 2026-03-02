@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
+import { trackEvent } from '../../utils/analytics';
 import type { AnxietyType } from '../../types/quiz';
 
 const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
@@ -34,6 +35,7 @@ export function ResultsPage() {
 
   useEffect(() => {
     if (!result) navigate('/test', { replace: true });
+    else trackEvent('view_result', { type: result.type });
   }, [result, navigate]);
 
   if (!result) return null;
@@ -105,7 +107,7 @@ export function ResultsPage() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                onClick={() => navigate('/checkout')}
+                onClick={() => { trackEvent('click_paywall'); navigate('/checkout'); }}
               >
                 Розблокувати — від 29 грн
               </Button>

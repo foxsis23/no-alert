@@ -1,8 +1,14 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
+import { trackEvent } from '../../../utils/analytics';
 
 export function Hero() {
   const navigate = useNavigate();
+
+  useEffect(() => {
+    trackEvent('view_landing');
+  }, []);
 
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">

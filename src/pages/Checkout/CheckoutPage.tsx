@@ -6,6 +6,7 @@ import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
 import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
+import { trackEvent } from '../../utils/analytics';
 import type { AnxietyType } from '../../types/quiz';
 
 const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {
@@ -22,6 +23,7 @@ export function CheckoutPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -42,6 +44,7 @@ export function CheckoutPage() {
 
     setIsSubmitting(true);
     setError(null);
+    trackEvent(`purchase_${selectedProduct.id}`, { price: selectedProduct.price });
 
     if (selectedProduct.price === null) {
       navigate('/thank-you');
@@ -109,6 +112,25 @@ export function CheckoutPage() {
               className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[#f5a623]/50 transition-colors"
             />
 
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToTerms}
+                onChange={(e) => setAgreedToTerms(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-[#f5a623] shrink-0"
+              />
+              <span className="text-white/50 text-sm leading-snug">
+                Я погоджуюсь з{' '}
+                <a href="/offer" target="_blank" className="text-[#f5a623] hover:underline">
+                  умовами оферти
+                </a>{' '}
+                та{' '}
+                <a href="/privacy" target="_blank" className="text-[#f5a623] hover:underline">
+                  політикою конфіденційності
+                </a>
+              </span>
+            </label>
+
             {error && (
               <p className="text-[#e53e3e] text-sm text-center">{error}</p>
             )}
@@ -118,7 +140,7 @@ export function CheckoutPage() {
               variant={isPriceless ? 'ghost' : 'primary'}
               size="lg"
               fullWidth
-              disabled={!selectedProduct || !name || !email || isSubmitting}
+              disabled={!selectedProduct || !name || !email || !agreedToTerms || isSubmitting}
             >
               {isSubmitting
                 ? 'Переходимо до оплати...'

@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { Header } from '../../components/layout/Header';
 import { ProgressBar } from '../../components/ui/ProgressBar';
 import { Button } from '../../components/ui/Button';
 import { QuestionCard } from './QuestionCard';
 import { useQuiz } from '../../hooks/useQuiz';
 import { ANSWER_OPTIONS } from '../../data/questions';
+import { trackEvent } from '../../utils/analytics';
 
 export function QuizPage() {
   const {
@@ -18,6 +20,10 @@ export function QuizPage() {
     handleNext,
     handleBack,
   } = useQuiz();
+
+  useEffect(() => {
+    trackEvent('start_test');
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">

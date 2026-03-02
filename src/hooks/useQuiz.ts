@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../store/quizStore';
 import { QUIZ_QUESTIONS } from '../data/questions';
+import { trackEvent } from '../utils/analytics';
 
 export function useQuiz() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export function useQuiz() {
     if (!hasAnswer) return;
     if (isLastQuestion) {
       computeResult();
+      trackEvent('complete_test');
       navigate('/result');
     } else {
       nextQuestion();

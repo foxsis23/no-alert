@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { SCENARIOS } from '../../data/scenarios';
 import type { ScenarioType } from '../../data/scenarios';
+import { trackEvent } from '../../utils/analytics';
 
 const RATING_OPTIONS = [
   { score: 1, emoji: '\u{1F61F}', label: 'Дуже погано' },
@@ -18,35 +19,85 @@ type Phase = 'session' | 'rating' | 'done';
 export function SessionPage() {
   const navigate = useNavigate();
   const { type } = useParams<{ type: string }>();
-  const [phraseIndex, setPhraseIndex] = useState(0);
+  const [stepIndex, setStepIndex] = useState(0);
   const [phase, setPhase] = useState<Phase>('session');
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [paused, setPaused] = useState(false);
+  const [timerProgress, setTimerProgress] = useState(0);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const scenario = SCENARIOS[type as ScenarioType];
+
+  useEffect(() => {
+    if (scenario) trackEvent(`start_session_${type}`);
+  }, [scenario, type]);
+
+  const advanceStep = useCallback(() => {
+    if (!scenario) return;
+    const isLast = stepIndex === scenario.steps.length - 1;
+    if (isLast) {
+      setPhase('rating');
+    } else {
+      setStepIndex((i) => i + 1);
+      setTimerProgress(0);
+    }
+  }, [scenario, stepIndex]);
+
+  // Auto-advance timer
+  useEffect(() => {
+    if (phase !== 'session' || paused || !scenario) return;
+
+    const step = scenario.steps[stepIndex];
+    if (!step || step.delaySeconds <= 0) return;
+
+    const totalMs = step.delaySeconds * 1000;
+    const tickMs = 50;
+    let elapsed = 0;
+
+    timerRef.current = setInterval(() => {
+      elapsed += tickMs;
+      setTimerProgress(Math.min(elapsed / totalMs, 1));
+      if (elapsed >= totalMs) {
+        if (timerRef.current) clearInterval(timerRef.current);
+        advanceStep();
+      }
+    }, tickMs);
+
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, [phase, paused, scenario, stepIndex, advanceStep]);
 
   if (!scenario) {
     navigate('/support', { replace: true });
     return null;
   }
 
-  const currentPhrase = scenario.phrases[phraseIndex];
-  const isLastPhrase = phraseIndex === scenario.phrases.length - 1;
-  const progress = Math.round(((phraseIndex + 1) / scenario.phrases.length) * 100);
+  const currentStep = scenario.steps[stepIndex];
+  const isLastStep = stepIndex === scenario.steps.length - 1;
+  const progress = Math.round(((stepIndex + 1) / scenario.steps.length) * 100);
+  const hasTimer = currentStep.delaySeconds > 0;
 
   function handleNext() {
-    if (isLastPhrase) {
-      setPhase('rating');
-    } else {
-      setPhraseIndex((i) => i + 1);
-    }
+    if (timerRef.current) clearInterval(timerRef.current);
+    setTimerProgress(0);
+    advanceStep();
+  }
+
+  function togglePause() {
+    setPaused((p) => !p);
   }
 
   function handleRating(score: number) {
     setSelectedRating(score);
+    trackEvent('finish_session', { type, score });
     setPhase('done');
   }
 
+  // Done screen — different for low vs high rating
   if (phase === 'done') {
+    const isLowRating = selectedRating !== null && selectedRating <= 2;
+
     return (
       <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
         <Header />
@@ -59,6 +110,17 @@ export function SessionPage() {
             <p className="text-white/60 text-base">
               Ти пройшов через це. Кожен раз стає трохи легше.
             </p>
+
+            {isLowRating && (
+              <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-left">
+                <p className="text-white/70 text-sm leading-relaxed">
+                  Якщо симптоми сильні, незвичні або не проходять — зверніться по
+                  медичну допомогу. Це не означає, що щось серйозне, але лікар
+                  допоможе виключити інші причини.
+                </p>
+              </div>
+            )}
+
             <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/support')}>
               Повернутись до підтримки
             </Button>
@@ -68,6 +130,7 @@ export function SessionPage() {
     );
   }
 
+  // Rating screen
   if (phase === 'rating') {
     return (
       <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -98,6 +161,7 @@ export function SessionPage() {
     );
   }
 
+  // Session screen
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
       <Header />
@@ -114,7 +178,7 @@ export function SessionPage() {
                 {'\u2190'} Вийти
               </button>
               <span className="text-white/40 text-sm">
-                {phraseIndex + 1} / {scenario.phrases.length}
+                {stepIndex + 1} / {scenario.steps.length}
               </span>
             </div>
             <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
@@ -126,16 +190,41 @@ export function SessionPage() {
           </div>
 
           {/* Phrase card */}
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 min-h-[180px] flex items-center justify-center">
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-8 min-h-[180px] flex flex-col items-center justify-center gap-4">
             <p className="text-white text-xl font-medium text-center leading-relaxed">
-              {currentPhrase}
+              {currentStep.text}
             </p>
+
+            {/* Timer indicator */}
+            {hasTimer && !paused && (
+              <div className="w-full max-w-[200px] h-1 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-white/30 rounded-full transition-none"
+                  style={{ width: `${timerProgress * 100}%` }}
+                />
+              </div>
+            )}
+
+            {paused && (
+              <span className="text-white/30 text-sm">На паузі</span>
+            )}
           </div>
 
-          {/* Next button */}
-          <Button variant="primary" size="lg" fullWidth onClick={handleNext}>
-            {isLastPhrase ? 'Завершити' : `Далі ${'\u2192'}`}
-          </Button>
+          {/* Controls */}
+          <div className="flex gap-3">
+            <Button
+              variant="ghost"
+              size="md"
+              onClick={togglePause}
+            >
+              {paused ? '\u25B6' : '\u23F8'} {paused ? 'Далі' : 'Пауза'}
+            </Button>
+            <div className="flex-1">
+              <Button variant="primary" size="lg" fullWidth onClick={handleNext}>
+                {isLastStep ? 'Завершити' : `Далі ${'\u2192'}`}
+              </Button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
