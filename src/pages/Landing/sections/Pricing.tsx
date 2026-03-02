@@ -1,0 +1,41 @@
+import { useNavigate } from 'react-router-dom';
+import { PRODUCTS } from '../../../data/products';
+
+export function Pricing() {
+  const navigate = useNavigate();
+
+  return (
+    <section className="py-16 px-6 bg-[#0d0d1a] border-t border-white/5">
+      <div className="max-w-3xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {PRODUCTS.map((product) => (
+            <button
+              key={product.id}
+              onClick={() => navigate('/quiz')}
+              className={`relative rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02] cursor-pointer ${
+                product.isHighlighted ? 'ring-2 ring-[#e53e3e]' : ''
+              }`}
+            >
+              {/* Image placeholder */}
+              <div
+                className="w-full h-36"
+                style={{ backgroundColor: product.imagePlaceholder }}
+              />
+              {/* Card content */}
+              <div
+                className={`p-4 ${
+                  product.isHighlighted ? 'bg-[#e53e3e]' : 'bg-[#1a1a2e]'
+                }`}
+              >
+                <p className="font-bold text-white text-base">{product.title}</p>
+                <p className={`text-sm mt-1 ${product.isHighlighted ? 'text-white/90' : 'text-[#f5a623]'}`}>
+                  {product.priceLabel}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
