@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AnxietyResult } from '../types/quiz';
 import type { Product } from '../types/product';
 import { QUIZ_QUESTIONS } from '../data/questions';
@@ -27,32 +28,44 @@ const initialState: QuizState = {
   selectedProduct: null,
 };
 
-export const useQuizStore = create<QuizState & QuizActions>((set, get) => ({
-  ...initialState,
+export const useQuizStore = create<QuizState & QuizActions>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-  setAnswer: (questionIndex, score) =>
-    set((state) => {
-      const answers = [...state.answers];
-      answers[questionIndex] = score;
-      return { answers };
+      setAnswer: (questionIndex, score) =>
+        set((state) => {
+          const answers = [...state.answers];
+          answers[questionIndex] = score;
+          return { answers };
+        }),
+
+      nextQuestion: () =>
+        set((state) => ({
+          currentQuestion: Math.min(state.currentQuestion + 1, QUIZ_QUESTIONS.length - 1),
+        })),
+
+      prevQuestion: () =>
+        set((state) => ({
+          currentQuestion: Math.max(state.currentQuestion - 1, 0),
+        })),
+
+      computeResult: () => {
+        const { answers } = get();
+        set({ result: computeAnxietyResult(answers) });
+      },
+
+      setSelectedProduct: (product) => set({ selectedProduct: product }),
+
+      reset: () => set(initialState),
     }),
-
-  nextQuestion: () =>
-    set((state) => ({
-      currentQuestion: Math.min(state.currentQuestion + 1, QUIZ_QUESTIONS.length - 1),
-    })),
-
-  prevQuestion: () =>
-    set((state) => ({
-      currentQuestion: Math.max(state.currentQuestion - 1, 0),
-    })),
-
-  computeResult: () => {
-    const { answers } = get();
-    set({ result: computeAnxietyResult(answers) });
-  },
-
-  setSelectedProduct: (product) => set({ selectedProduct: product }),
-
-  reset: () => set(initialState),
-}));
+    {
+      name: 'quiz-store',
+      storage: createJSONStorage(() => sessionStorage),
+      partialize: (state) => ({
+        result: state.result,
+        selectedProduct: state.selectedProduct,
+      }),
+    },
+  ),
+);
