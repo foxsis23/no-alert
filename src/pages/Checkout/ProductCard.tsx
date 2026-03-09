@@ -10,20 +10,19 @@ export function ProductCard({ product, isSelected, onSelect }: ProductCardProps)
   return (
     <button
       onClick={onSelect}
-      className={`relative rounded-xl overflow-hidden text-left w-full transition-all duration-200
-        ${product.isHighlighted ? '' : 'bg-[#1a1a2e]'}
+      className={`relative rounded-xl overflow-hidden text-left w-full transition-all duration-200 flex flex-col
         ${isSelected ? 'ring-2 ring-[#f5a623] scale-[1.02]' : 'ring-1 ring-white/10 hover:ring-white/30'}
       `}
     >
-      {/* Image placeholder */}
-      <div
-        className="w-full h-28 flex items-center justify-center text-white/20 text-sm"
-        style={product.isHighlighted ? { backgroundColor: product.imagePlaceholder } : undefined}
-      >
-        {product.subtitle}
+      <div className="flex-1 flex items-center justify-center overflow-hidden" style={{ backgroundColor: product.imagePlaceholder }}>
+        <img
+          src={product.imageSrc}
+          alt={product.title}
+          className="w-full h-full object-cover"
+        />
       </div>
 
-      <div className={`p-4 ${product.isHighlighted ? 'bg-[#e53e3e]' : ''}`}>
+      <div className={`p-4 ${product.isHighlighted ? 'bg-[#e53e3e]' : 'bg-[#1a1a2e]'}`}>
         <p className="font-bold text-white text-sm">{product.title}</p>
         <p className={`text-sm mt-1 font-semibold ${product.isHighlighted ? 'text-white' : 'text-[#f5a623]'}`}>
           {product.priceLabel}

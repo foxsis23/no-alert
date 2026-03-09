@@ -17,9 +17,10 @@ export function Pricing() {
                 product.isHighlighted ? 'ring-2 ring-[#e53e3e]' : ''
               }`}
             >
-              {/* Image placeholder */}
-              <div
-                className="w-full h-36"
+              <img
+                src={product.imageSrc}
+                alt='pricing'
+                className="w-full h-36 object-cover object-center"
                 style={{ backgroundColor: product.imagePlaceholder }}
               />
               {/* Card content */}

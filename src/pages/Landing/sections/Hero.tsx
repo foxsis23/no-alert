@@ -15,15 +15,11 @@ export function Hero() {
       {/* Dark gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#0d0d1a]" />
 
-      {/* Atmospheric background */}
-      <div className="absolute inset-0 bg-[#1a1a2e]">
-        <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            background: 'radial-gradient(ellipse at 50% 30%, #2d3561 0%, #0d0d1a 70%)',
-          }}
-        />
-      </div>
+      {/* Background image */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('/hero.png')" }}
+      />
 
       <div className="relative z-10 flex flex-col items-center gap-6 max-w-lg">
         <h1 className="text-6xl md:text-7xl font-black text-white leading-tight">

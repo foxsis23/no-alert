@@ -10,6 +10,7 @@ export const PRODUCTS: Product[] = [
     description: 'Покрокові техніки для швидкого зняття тривоги прямо зараз.',
     isHighlighted: false,
     imagePlaceholder: '#2d3748',
+    imageSrc: '/pricing1.png',
     hasSupport: false,
   },
   {
@@ -21,6 +22,7 @@ export const PRODUCTS: Product[] = [
     description: 'Авторський курс психіатра — від причин тривоги до стійких змін.',
     isHighlighted: true,
     imagePlaceholder: '#742a2a',
+    imageSrc: '/pricing2.png',
     hasSupport: true,
   },
   {
@@ -32,6 +34,7 @@ export const PRODUCTS: Product[] = [
     description: 'Персональний супровід і підтримка протягом тижня.',
     isHighlighted: false,
     imagePlaceholder: '#1a202c',
+    imageSrc: '/pricing3.png',
     hasSupport: true,
   },
 ];
@@ -46,6 +49,7 @@ export const UPSELL_PRODUCTS: Product[] = [
     description: '5-хвилинне аудіо, яке зупиняє паніку. Слухай у будь-який момент.',
     isHighlighted: false,
     imagePlaceholder: '#2d3748',
+    imageSrc: '/pricing3.png',
     hasSupport: false,
   },
   {
@@ -57,6 +61,7 @@ export const UPSELL_PRODUCTS: Product[] = [
     description: 'Щоденний план відновлення нервової системи на 7 днів.',
     isHighlighted: false,
     imagePlaceholder: '#1a365d',
+    imageSrc: '/pricing2.png',
     hasSupport: false,
   },
 ];

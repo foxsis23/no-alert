@@ -1,7 +1,9 @@
-const STEPS = [
-  { icon: '👤', label: 'Відповідаєш на питання', step: 1 },
-  { icon: '✅', label: 'Дізнаєшся свій тип тривоги', step: 2 },
-  { icon: '💡', label: 'Отримуєш, що робити зараз', step: 3 },
+import { ClipboardList, Brain, Lightbulb, type LucideIcon } from 'lucide-react';
+
+const STEPS: { icon: LucideIcon; label: string; step: number }[] = [
+  { icon: ClipboardList, label: 'Відповідаєш на питання', step: 1 },
+  { icon: Brain, label: 'Дізнаєшся свій тип тривоги', step: 2 },
+  { icon: Lightbulb, label: 'Отримуєш, що робити зараз', step: 3 },
 ];
 
 export function HowItWorks() {
@@ -17,7 +19,7 @@ export function HowItWorks() {
             <>
               <div key={step.step} className="flex flex-col items-center gap-3 flex-1 max-w-[140px]">
                 <div className="w-16 h-16 rounded-full bg-white/10 border-2 border-white/20 flex items-center justify-center text-2xl">
-                  {step.icon}
+                  <step.icon className="w-7 h-7 text-[#f5a623]" strokeWidth={1.5} />
                 </div>
                 <p className="text-sm text-white/70 text-center leading-tight">
                   <span className="text-white/40">{step.step}. </span>

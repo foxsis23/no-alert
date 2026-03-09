@@ -2,14 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 
 const SYMPTOMS = [
-  { icon: '\u2764\uFE0F', label: "Серце б'ється" },
-  { icon: '\u{1FAC1}', label: 'Важко вдихнути' },
-  { icon: '\u{1F630}', label: 'Страх втратити контроль' },
-  { icon: '\u{1F32B}\uFE0F', label: 'Дереалізація' },
-  { icon: '\u{1F922}', label: 'Нудота або тремор' },
-  { icon: '\u{1F4A4}', label: 'Постійне напруження' },
-  { icon: '\u{1F504}', label: 'Страх повторення' },
-  { icon: '\u{1F50D}', label: 'Перевірки тіла' },
+  { image: '/1.png', label: "Серце б'ється" },
+  { image: '/2.png', label: 'Важко вдихнути' },
+  { image: '/3.png', label: 'Страх втратити контроль' },
+  { image: '/4.png', label: 'Нудота або тремор' },
+  { image: '/5.png', label: 'Постійне напруження' },
 ];
 
 export function Symptoms() {
@@ -22,14 +19,15 @@ export function Symptoms() {
           Знайомі відчуття?
         </h2>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-10">
+        <div className="flex flex-col items-center gap-3 sm:grid sm:grid-cols-3 md:grid-cols-5 mb-10">
           {SYMPTOMS.map((symptom) => (
             <div
               key={symptom.label}
-              className="flex flex-col items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:border-white/25 transition-colors"
+              className="relative rounded-xl overflow-hidden border border-white/10 hover:border-white/25 transition-colors aspect-square flex items-end justify-center w-48 sm:w-full"
             >
-              <span className="text-3xl">{symptom.icon}</span>
-              <span className="text-sm text-white/80 text-center leading-tight">
+              <img src={symptom.image} alt={symptom.label} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <span className="relative z-10 text-xs sm:text-sm text-white font-medium text-center leading-tight p-2 sm:p-3">
                 {symptom.label}
               </span>
             </div>
