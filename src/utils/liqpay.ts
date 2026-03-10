@@ -61,6 +61,7 @@ export async function redirectToLiqPay(params: LiqPayCheckoutParams): Promise<vo
     customer: params.customerName,
     customer_email: params.customerEmail,
     result_url: `${window.location.origin}/thank-you`,
+    server_url: `${window.location.origin}/api/liqpay-callback`,
     language: 'uk',
   };
 
@@ -89,8 +90,11 @@ export async function redirectToLiqPay(params: LiqPayCheckoutParams): Promise<vo
   form.submit();
 }
 
-/** Unique order ID per transaction */
-export function generateOrderId(productId: string): string {
+/** Unique order ID per transaction, with email encoded for callback */
+export function generateOrderId(productId: string, email: string): string {
   const random = Math.random().toString(36).slice(2, 7);
-  return `trivoga_${productId}_${Date.now()}_${random}`;
+  const emailHex = Array.from(new TextEncoder().encode(email))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return `trivoga_${productId}_${Date.now()}_${random}_${emailHex}`;
 }

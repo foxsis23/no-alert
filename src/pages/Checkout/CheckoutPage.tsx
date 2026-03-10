@@ -55,7 +55,7 @@ export function CheckoutPage() {
       await redirectToLiqPay({
         amount: selectedProduct.price,
         description: `${selectedProduct.title} — тривога.net`,
-        orderId: generateOrderId(selectedProduct.id),
+        orderId: generateOrderId(selectedProduct.id, email),
         customerName: name,
         customerEmail: email,
       });
