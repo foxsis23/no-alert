@@ -4,6 +4,7 @@ import { QuizPage } from './pages/Quiz/QuizPage';
 import { ResultsPage } from './pages/Results/ResultsPage';
 import { CheckoutPage } from './pages/Checkout/CheckoutPage';
 import { ThankYouPage } from './pages/ThankYou/ThankYouPage';
+import { CoursePage } from './pages/Course/CoursePage';
 import { SupportPage } from './pages/Support/SupportPage';
 import { SessionPage } from './pages/Support/SessionPage';
 
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/result" element={<ResultsPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/thank-you" element={<ThankYouPage />} />
+        <Route path="/course/:productId" element={<CoursePage />} />
         <Route path="/support" element={<SupportPage />} />
         <Route path="/support/session/:type" element={<SessionPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

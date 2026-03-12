@@ -10,6 +10,7 @@ interface QuizState {
   currentQuestion: number;
   result: AnxietyResult | null;
   selectedProduct: Product | null;
+  purchasedProductIds: string[];
 }
 
 interface QuizActions {
@@ -18,6 +19,7 @@ interface QuizActions {
   prevQuestion: () => void;
   computeResult: () => void;
   setSelectedProduct: (product: Product) => void;
+  addPurchasedProduct: (id: string) => void;
   reset: () => void;
 }
 
@@ -26,6 +28,7 @@ const initialState: QuizState = {
   currentQuestion: 0,
   result: null,
   selectedProduct: null,
+  purchasedProductIds: [],
 };
 
 export const useQuizStore = create<QuizState & QuizActions>()(
@@ -57,6 +60,13 @@ export const useQuizStore = create<QuizState & QuizActions>()(
 
       setSelectedProduct: (product) => set({ selectedProduct: product }),
 
+      addPurchasedProduct: (id) =>
+        set((state) => ({
+          purchasedProductIds: state.purchasedProductIds.includes(id)
+            ? state.purchasedProductIds
+            : [...state.purchasedProductIds, id],
+        })),
+
       reset: () => set(initialState),
     }),
     {
@@ -65,6 +75,7 @@ export const useQuizStore = create<QuizState & QuizActions>()(
       partialize: (state) => ({
         result: state.result,
         selectedProduct: state.selectedProduct,
+        purchasedProductIds: state.purchasedProductIds,
       }),
     },
   ),

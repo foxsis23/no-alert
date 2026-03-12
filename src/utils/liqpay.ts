@@ -11,6 +11,7 @@ export interface LiqPayCheckoutParams {
   orderId: string;
   customerName: string;
   customerEmail: string;
+  resultUrl?: string;
 }
 
 /**
@@ -60,7 +61,7 @@ export async function redirectToLiqPay(params: LiqPayCheckoutParams): Promise<vo
     order_id: params.orderId,
     customer: params.customerName,
     customer_email: params.customerEmail,
-    result_url: `${window.location.origin}/thank-you`,
+    result_url: `${window.location.origin}${params.resultUrl ?? '/thank-you'}`,
     server_url: `${window.location.origin}/api/liqpay-callback`,
     language: 'uk',
   };

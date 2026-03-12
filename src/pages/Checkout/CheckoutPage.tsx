@@ -19,7 +19,7 @@ const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { result, selectedProduct, setSelectedProduct } = useQuizStore();
+  const { result, selectedProduct, setSelectedProduct, addPurchasedProduct } = useQuizStore();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,8 +46,10 @@ export function CheckoutPage() {
     setError(null);
     trackEvent(`purchase_${selectedProduct.id}`, { price: selectedProduct.price });
 
+    addPurchasedProduct(selectedProduct.id);
+
     if (selectedProduct.price === null) {
-      navigate('/thank-you');
+      navigate(`/course/${selectedProduct.id}`);
       return;
     }
 
@@ -58,6 +60,7 @@ export function CheckoutPage() {
         orderId: generateOrderId(selectedProduct.id, email),
         customerName: name,
         customerEmail: email,
+        resultUrl: `/course/${selectedProduct.id}`,
       });
     } catch (err) {
       setError(
