@@ -144,7 +144,7 @@ export function SessionPage() {
                 <button
                   key={opt.score}
                   onClick={() => handleRating(opt.score)}
-                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 min-w-[60px] ${
+                  className={`flex flex-col items-center gap-1 p-3 rounded-xl border transition-all duration-200 min-w-[60px] cursor-pointer ${
                     selectedRating === opt.score
                       ? 'border-[#f5a623] bg-[#f5a623]/10'
                       : 'border-white/10 hover:border-white/30 bg-white/5'
@@ -173,7 +173,7 @@ export function SessionPage() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => navigate('/support')}
-                className="text-white/40 hover:text-white/70 transition-colors text-sm"
+                className="text-white/40 hover:text-white/70 transition-colors text-sm cursor-pointer"
               >
                 {'\u2190'} Вийти
               </button>

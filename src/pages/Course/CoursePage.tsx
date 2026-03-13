@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { useQuizStore } from '../../store/quizStore';
 import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
@@ -9,7 +10,6 @@ export function CoursePage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { result, purchasedProductIds } = useQuizStore();
-  const [toastVisible, setToastVisible] = useState(true);
 
   const product = getAllProducts().find((p) => p.id === productId);
   const hasAccess = productId ? purchasedProductIds.includes(productId) : false;
@@ -20,28 +20,19 @@ export function CoursePage() {
   }, [result, hasAccess, navigate]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setToastVisible(false), 4000);
-    return () => clearTimeout(timer);
-  }, []);
+    if (!result || !hasAccess || !productId) return;
+    const key = `toast_shown_${productId}`;
+    if (!sessionStorage.getItem(key)) {
+      toast.success('Ви отримали доступ до курсу!');
+      sessionStorage.setItem(key, '1');
+    }
+  }, [result, hasAccess, productId]);
 
   if (!result || !hasAccess || !product) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
       <Header />
-
-      {toastVisible && (
-        <div className="fixed top-6 right-6 z-50 bg-green-500/20 border border-green-500/40 text-green-300 px-5 py-3 rounded-xl shadow-lg flex items-center gap-3">
-          <span className="text-lg font-bold">✓</span>
-          <span className="font-medium">Ви отримали доступ до курсу!</span>
-          <button
-            onClick={() => setToastVisible(false)}
-            className="ml-2 text-green-300/60 hover:text-green-300 leading-none"
-          >
-            ✕
-          </button>
-        </div>
-      )}
 
       <main className="flex-1 flex flex-col items-center px-6 py-24">
         <div className="w-full max-w-2xl flex flex-col gap-10">

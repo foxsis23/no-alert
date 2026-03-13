@@ -11,7 +11,7 @@ export const PRODUCTS: Product[] = [
     isHighlighted: false,
     imagePlaceholder: '#2d3748',
     imageSrc: '/pricing1.png',
-    hasSupport: false,
+    hasSupport: true,
   },
   {
     id: 'course',

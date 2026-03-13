@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
+import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { trackEvent } from '../../utils/analytics';
 
@@ -27,17 +28,21 @@ const SCENARIOS = [
 
 export function SupportPage() {
   const navigate = useNavigate();
-  const { selectedProduct } = useQuizStore();
+  const { purchasedProductIds } = useQuizStore();
+  const allProducts = getAllProducts();
+  const hasSupportAccess = purchasedProductIds.some(
+    (id) => allProducts.find((p) => p.id === id)?.hasSupport,
+  );
 
   useEffect(() => {
-    if (!selectedProduct || !selectedProduct.hasSupport) {
+    if (!hasSupportAccess) {
       navigate('/checkout', { replace: true });
     } else {
       trackEvent('enter_support');
     }
-  }, [selectedProduct, navigate]);
+  }, [hasSupportAccess, navigate]);
 
-  if (!selectedProduct || !selectedProduct.hasSupport) return null;
+  if (!hasSupportAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -55,7 +60,7 @@ export function SupportPage() {
               <button
                 key={scenario.type}
                 onClick={() => navigate(`/support/session/${scenario.type}`)}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl p-6 text-left transition-all duration-200 group"
+                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-2xl p-6 text-left transition-all duration-200 group cursor-pointer"
               >
                 <div className="flex items-center gap-4">
                   <span className="text-4xl">{scenario.emoji}</span>

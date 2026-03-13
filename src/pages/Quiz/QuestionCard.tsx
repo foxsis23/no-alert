@@ -27,7 +27,7 @@ export function QuestionCard({
               key={option.score}
               aria-pressed={isSelected}
               onClick={() => onSelect(option.score)}
-              className={`w-full py-4 px-6 rounded-xl border text-base font-medium transition-all duration-200 text-left
+              className={`w-full py-4 px-6 rounded-xl border text-base font-medium transition-all duration-200 text-left cursor-pointer
                 ${
                   isSelected
                     ? 'bg-[#f5a623] border-[#f5a623] text-black'

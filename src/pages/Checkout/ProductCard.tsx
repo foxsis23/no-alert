@@ -10,7 +10,7 @@ export function ProductCard({ product, isSelected, onSelect }: ProductCardProps)
   return (
     <button
       onClick={onSelect}
-      className={`relative rounded-xl overflow-hidden text-left w-full transition-all duration-200 flex flex-col
+      className={`relative rounded-xl overflow-hidden text-left w-full transition-all duration-200 flex flex-col cursor-pointer
         ${isSelected ? 'ring-2 ring-[#f5a623] scale-[1.02]' : 'ring-1 ring-white/10 hover:ring-white/30'}
       `}
     >
