@@ -10,6 +10,8 @@ import { CourseBasicPage } from './pages/Course/CourseBasicPage';
 import { SupportPage } from './pages/Support/SupportPage';
 import { SessionPage } from './pages/Support/SessionPage';
 import { PanicAudioPage } from './pages/Support/PanicAudioPage';
+import { TermsPage } from './pages/Legal/TermsPage';
+import { PrivacyPage } from './pages/Legal/PrivacyPage';
 
 export default function App() {
   return (
@@ -26,6 +28,8 @@ export default function App() {
         <Route path="/support" element={<SupportPage />} />
         <Route path="/support/session/panic_wave" element={<PanicAudioPage />} />
         <Route path="/support/session/:type" element={<SessionPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
