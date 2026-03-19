@@ -14,6 +14,8 @@ import { TermsPage } from './pages/Legal/TermsPage';
 import { PrivacyPage } from './pages/Legal/PrivacyPage';
 import { OfferPage } from './pages/Legal/OfferPage';
 import { DisclaimerPage } from './pages/Legal/DisclaimerPage';
+import { AccessPage } from './pages/Access/AccessPage';
+import { MyMaterialsPage } from './pages/MyMaterials/MyMaterialsPage';
 
 export default function App() {
   return (
@@ -34,6 +36,8 @@ export default function App() {
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/offer" element={<OfferPage />} />
         <Route path="/disclaimer" element={<DisclaimerPage />} />
+        <Route path="/access/:token" element={<AccessPage />} />
+        <Route path="/my-materials" element={<MyMaterialsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

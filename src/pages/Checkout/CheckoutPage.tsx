@@ -9,9 +9,8 @@ import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
 import { trackEvent } from '../../utils/analytics';
 import type { AnxietyType } from '../../types/quiz';
 
-function getResultPath(productId: string): string {
-  if (productId === 'basic' || productId === 'support_7_days') return '/support';
-  return `/course/${productId}`;
+function getResultPath(_productId: string): string {
+  return '/my-materials';
 }
 
 const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {

@@ -8,6 +8,7 @@ create table if not exists orders (
   amount numeric not null default 0,
   status text not null default 'pending', -- pending | success | failed
   liqpay_status text,
+  access_token text unique,
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

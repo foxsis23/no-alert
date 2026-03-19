@@ -18,12 +18,11 @@ export function CourseBasicPage() {
   const hasAccess = purchasedProductIds.includes('basic');
 
   useEffect(() => {
-    if (!result) navigate('/', { replace: true });
-    else if (!hasAccess) navigate('/checkout', { replace: true });
-  }, [result, hasAccess, navigate]);
+    if (!hasAccess) navigate('/checkout', { replace: true });
+  }, [hasAccess, navigate]);
 
   useEffect(() => {
-    if (!result || !hasAccess) return;
+    if (!hasAccess) return;
     if (!sessionStorage.getItem(TOAST_KEY)) {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(TOAST_KEY, '1');
@@ -66,7 +65,7 @@ export function CourseBasicPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  if (!result || !hasAccess) return null;
+  if (!hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">

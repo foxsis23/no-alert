@@ -51,6 +51,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const isSuccess = status === 'success' || status === 'sandbox';
 
+  const accessToken = isSuccess ? crypto.randomUUID() : null;
+
   // Upsert order in Supabase
   await supabase.from('orders').upsert({
     order_id,
@@ -59,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     amount: amount ?? 0,
     status: isSuccess ? 'success' : 'failed',
     liqpay_status: status,
+    ...(accessToken ? { access_token: accessToken } : {}),
   }, { onConflict: 'order_id' });
 
   if (!isSuccess) {
@@ -67,7 +70,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Send access email
   try {
-    await sendAccessEmail(email, productId);
+    await sendAccessEmail(email, productId, accessToken!);
   } catch (err) {
     console.error('Email send failed:', err);
     // Don't fail the callback — order is already saved

@@ -71,7 +71,7 @@ export const useQuizStore = create<QuizState & QuizActions>()(
     }),
     {
       name: 'quiz-store',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         result: state.result,
         selectedProduct: state.selectedProduct,

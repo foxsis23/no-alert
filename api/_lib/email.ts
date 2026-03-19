@@ -12,14 +12,9 @@ const PRODUCT_TITLES: Record<string, string> = {
   upsell_stability_7days: 'Стабільність 7 днів',
 };
 
-function getAccessPath(productId: string): string {
-  if (productId === 'basic' || productId === 'support_7_days') return '/support';
-  return `/course/${productId}`;
-}
-
-export async function sendAccessEmail(email: string, productId: string) {
+export async function sendAccessEmail(email: string, productId: string, accessToken: string) {
   const title = PRODUCT_TITLES[productId] ?? 'Ваш продукт';
-  const accessUrl = `${APP_URL}${getAccessPath(productId)}`;
+  const accessUrl = `${APP_URL}/access/${accessToken}`;
 
   await resend.emails.send({
     from: 'тривога.net <noreply@tryvoga.net>',
