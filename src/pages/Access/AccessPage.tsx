@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-
+import { saveUserEmail } from '../../utils/user';
 
 export function AccessPage() {
   const { token } = useParams<{ token: string }>();
@@ -14,8 +14,9 @@ export function AccessPage() {
 
     fetch(`/api/access?token=${token}`)
       .then((r) => r.json())
-      .then((data: { valid: boolean; productId?: string }) => {
+      .then((data: { valid: boolean; productId?: string; email?: string }) => {
         if (!data.valid || !data.productId) { setError(true); return; }
+        if (data.email) saveUserEmail(data.email);
         addPurchasedProduct(data.productId);
         navigate('/my-materials', { replace: true });
       })

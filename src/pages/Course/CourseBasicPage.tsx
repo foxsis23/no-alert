@@ -1,33 +1,41 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
+import { useMyPurchases } from '../../hooks/useMyPurchases';
+import { getUserEmail } from '../../utils/user';
 
 const TOAST_KEY = 'toast_shown_basic';
 
 export function CourseBasicPage() {
   const navigate = useNavigate();
-  const { result, purchasedProductIds } = useQuizStore();
+  const { productIds, ready } = useMyPurchases();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const hasAccess = purchasedProductIds.includes('basic');
+  const hasAccess = productIds.includes('basic');
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!hasAccess) navigate('/checkout', { replace: true });
-  }, [hasAccess, navigate]);
+    if (ready && !hasAccess) navigate('/checkout', { replace: true });
+  }, [ready, hasAccess, navigate]);
 
   useEffect(() => {
-    if (!hasAccess) return;
+    if (!ready || !hasAccess) return;
     if (!sessionStorage.getItem(TOAST_KEY)) {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(TOAST_KEY, '1');
     }
-  }, [result, hasAccess]);
+    const email = getUserEmail();
+    if (!email) return;
+    fetch(`/api/audio?file=basic&email=${encodeURIComponent(email)}`)
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then(({ url }: { url: string }) => setAudioUrl(url))
+      .catch(() => {});
+  }, [ready, hasAccess]);
 
   function togglePlay() {
     const audio = audioRef.current;
@@ -65,7 +73,7 @@ export function CourseBasicPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  if (!hasAccess) return null;
+  if (!ready || !hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -135,7 +143,7 @@ export function CourseBasicPage() {
 
       <audio
         ref={audioRef}
-        src="/що-робити-зараз.wav"
+        src={audioUrl ?? ''}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}

@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuizStore } from '../../store/quizStore';
 import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { trackEvent } from '../../utils/analytics';
+import { useMyPurchases } from '../../hooks/useMyPurchases';
 
 const SCENARIOS = [
   {
@@ -28,21 +28,19 @@ const SCENARIOS = [
 
 export function SupportPage() {
   const navigate = useNavigate();
-  const { purchasedProductIds } = useQuizStore();
+  const { productIds, ready } = useMyPurchases();
   const allProducts = getAllProducts();
-  const hasSupportAccess = purchasedProductIds.some(
+  const hasSupportAccess = productIds.some(
     (id) => allProducts.find((p) => p.id === id)?.hasSupport,
   );
 
   useEffect(() => {
-    if (!hasSupportAccess) {
-      navigate('/checkout', { replace: true });
-    } else {
-      trackEvent('enter_support');
-    }
-  }, [hasSupportAccess, navigate]);
+    if (!ready) return;
+    if (!hasSupportAccess) navigate('/checkout', { replace: true });
+    else trackEvent('enter_support');
+  }, [ready, hasSupportAccess, navigate]);
 
-  if (!hasSupportAccess) return null;
+  if (!ready || !hasSupportAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">

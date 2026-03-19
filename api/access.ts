@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const { data: order, error } = await supabase
     .from('orders')
-    .select('product_id, status')
+    .select('product_id, email, status')
     .eq('access_token', token)
     .single();
 
@@ -21,5 +21,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).json({ valid: false });
   }
 
-  return res.status(200).json({ valid: true, productId: order.product_id });
+  return res.status(200).json({ valid: true, productId: order.product_id, email: order.email });
 }

@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useQuizStore } from '../../store/quizStore';
 import { getAllProducts } from '../../data/products';
+import { useMyPurchases } from '../../hooks/useMyPurchases';
+import { getUserEmail } from '../../utils/user';
 
-const AUDIO_SRC = '/що-робити-зараз.wav';
 const TOAST_KEY = 'toast_shown_panic_wave';
 
 function formatTime(seconds: number): string {
@@ -15,46 +15,42 @@ function formatTime(seconds: number): string {
 
 export function PanicAudioPage() {
   const navigate = useNavigate();
-  const { purchasedProductIds } = useQuizStore();
+  const { productIds, ready } = useMyPurchases();
   const allProducts = getAllProducts();
-  const hasSupportAccess = purchasedProductIds.some(
+  const hasSupportAccess = productIds.some(
     (id) => allProducts.find((p) => p.id === id)?.hasSupport,
   );
 
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    if (!hasSupportAccess) {
-      navigate('/checkout', { replace: true });
-      return;
-    }
+    if (!ready) return;
+    if (!hasSupportAccess) { navigate('/checkout', { replace: true }); return; }
+
     if (!sessionStorage.getItem(TOAST_KEY)) {
-      toast('Натисни play — і просто слухай. Будь поруч із собою.', {
-        duration: 5000,
-      });
+      toast('Натисни play — і просто слухай. Будь поруч із собою.', { duration: 5000 });
       sessionStorage.setItem(TOAST_KEY, '1');
     }
-  }, [hasSupportAccess, navigate]);
+
+    // Fetch signed audio URL
+    const email = getUserEmail();
+    if (!email) return;
+
+    fetch(`/api/audio?file=panic_wave&email=${encodeURIComponent(email)}`)
+      .then((r) => r.ok ? r.json() : Promise.reject())
+      .then(({ url }: { url: string }) => setAudioUrl(url))
+      .catch(() => toast.error('Не вдалось завантажити аудіо'));
+  }, [ready, hasSupportAccess, navigate]);
 
   function togglePlay() {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying) {
-      audio.pause();
-    } else {
-      void audio.play();
-    }
-  }
-
-  function handleTimeUpdate() {
-    if (audioRef.current) setCurrentTime(audioRef.current.currentTime);
-  }
-
-  function handleLoadedMetadata() {
-    if (audioRef.current) setDuration(audioRef.current.duration);
+    if (isPlaying) audio.pause();
+    else void audio.play();
   }
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
@@ -65,7 +61,7 @@ export function PanicAudioPage() {
     setCurrentTime(value);
   }
 
-  if (!hasSupportAccess) return null;
+  if (!ready || !hasSupportAccess) return null;
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -87,22 +83,28 @@ export function PanicAudioPage() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6">
-          <button
-            onClick={togglePlay}
-            aria-label={isPlaying ? 'Пауза' : 'Відтворити'}
-            className="w-20 h-20 rounded-full bg-[#f5a623] hover:bg-[#f5a623]/90 active:scale-95 transition-all duration-150 flex items-center justify-center shadow-lg shadow-[#f5a623]/20 cursor-pointer"
-          >
-            {isPlaying ? (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                <rect x="6" y="4" width="4" height="16" rx="1" />
-                <rect x="14" y="4" width="4" height="16" rx="1" />
-              </svg>
-            ) : (
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
-                <polygon points="5,3 19,12 5,21" />
-              </svg>
-            )}
-          </button>
+          {!audioUrl ? (
+            <div className="w-20 h-20 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <button
+              onClick={togglePlay}
+              aria-label={isPlaying ? 'Пауза' : 'Відтворити'}
+              className="w-20 h-20 rounded-full bg-[#f5a623] hover:bg-[#f5a623]/90 active:scale-95 transition-all duration-150 flex items-center justify-center shadow-lg shadow-[#f5a623]/20 cursor-pointer"
+            >
+              {isPlaying ? (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                  <rect x="6" y="4" width="4" height="16" rx="1" />
+                  <rect x="14" y="4" width="4" height="16" rx="1" />
+                </svg>
+              ) : (
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                  <polygon points="5,3 19,12 5,21" />
+                </svg>
+              )}
+            </button>
+          )}
 
           <div className="w-full flex flex-col gap-2">
             <input
@@ -112,7 +114,8 @@ export function PanicAudioPage() {
               step={0.1}
               value={currentTime}
               onChange={handleSeek}
-              className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-[#f5a623]"
+              disabled={!audioUrl}
+              className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-[#f5a623] disabled:opacity-30"
               style={{
                 background: `linear-gradient(to right, #f5a623 ${progress}%, rgba(255,255,255,0.1) ${progress}%)`,
               }}
@@ -129,15 +132,17 @@ export function PanicAudioPage() {
         </p>
       </div>
 
-      <audio
-        ref={audioRef}
-        src={AUDIO_SRC}
-        onTimeUpdate={handleTimeUpdate}
-        onLoadedMetadata={handleLoadedMetadata}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-      />
+      {audioUrl && (
+        <audio
+          ref={audioRef}
+          src={audioUrl}
+          onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
+          onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+        />
+      )}
     </div>
   );
 }

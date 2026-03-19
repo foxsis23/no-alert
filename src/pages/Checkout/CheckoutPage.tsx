@@ -7,6 +7,7 @@ import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
 import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
 import { trackEvent } from '../../utils/analytics';
+import { saveUserEmail } from '../../utils/user';
 import type { AnxietyType } from '../../types/quiz';
 
 function getResultPath(_productId: string): string {
@@ -48,6 +49,7 @@ export function CheckoutPage() {
 
     setIsSubmitting(true);
     setError(null);
+    saveUserEmail(email);
     trackEvent(`purchase_${selectedProduct.id}`, { price: selectedProduct.price });
 
     addPurchasedProduct(selectedProduct.id);

@@ -1,33 +1,33 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { useQuizStore } from '../../store/quizStore';
 import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
+import { useMyPurchases } from '../../hooks/useMyPurchases';
 
 export function CoursePage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
-  const { result, purchasedProductIds } = useQuizStore();
+  const { productIds, ready } = useMyPurchases();
 
   const product = getAllProducts().find((p) => p.id === productId);
-  const hasAccess = productId ? purchasedProductIds.includes(productId) : false;
+  const hasAccess = productId ? productIds.includes(productId) : false;
 
   useEffect(() => {
-    if (!hasAccess) navigate('/checkout', { replace: true });
-  }, [hasAccess, navigate]);
+    if (ready && !hasAccess) navigate('/checkout', { replace: true });
+  }, [ready, hasAccess, navigate]);
 
   useEffect(() => {
-    if (!hasAccess || !productId) return;
+    if (!ready || !hasAccess || !productId) return;
     const key = `toast_shown_${productId}`;
     if (!sessionStorage.getItem(key)) {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(key, '1');
     }
-  }, [result, hasAccess, productId]);
+  }, [ready, hasAccess, productId]);
 
-  if (!hasAccess || !product) return null;
+  if (!ready || !hasAccess || !product) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
