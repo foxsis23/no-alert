@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from '../_lib/supabase';
+import { supabase } from '../_lib/supabase.js';
 
 function checkAuth(req: VercelRequest): boolean {
   const auth = req.headers.authorization;

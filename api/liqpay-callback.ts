@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './_lib/supabase';
-import { sendAccessEmail } from './_lib/email';
+import { supabase } from './_lib/supabase.js';
+import { sendAccessEmail } from './_lib/email.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

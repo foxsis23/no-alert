@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabase } from './_lib/supabase';
+import { supabase } from './_lib/supabase.js';
 
 // Map of audio keys to Supabase Storage file paths (bucket: "audio")
 const AUDIO_FILES: Record<string, string> = {
