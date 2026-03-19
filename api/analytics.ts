@@ -16,11 +16,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing event' });
   }
 
-  await supabase.from('events').insert({
+  const { error } = await supabase.from('events').insert({
     event_type: event,
     metadata: params ?? null,
     session_id: sessionId ?? null,
   });
+
+  if (error) console.error('Analytics insert error:', error.message);
 
   return res.status(200).json({ ok: true });
 }
