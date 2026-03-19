@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { useMyPurchases } from '../../hooks/useMyPurchases';
-import { getUserEmail } from '../../utils/user';
 
 const TOAST_KEY = 'toast_shown_basic';
 
@@ -17,7 +16,7 @@ export function CourseBasicPage() {
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const hasAccess = productIds.includes('basic');
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioUrl = '/basic.mp3';
 
   useEffect(() => {
     if (ready && !hasAccess) navigate('/checkout', { replace: true });
@@ -29,12 +28,6 @@ export function CourseBasicPage() {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(TOAST_KEY, '1');
     }
-    const email = getUserEmail();
-    if (!email) return;
-    fetch(`/api/audio?file=basic&email=${encodeURIComponent(email)}`)
-      .then((r) => r.ok ? r.json() : Promise.reject())
-      .then(({ url }: { url: string }) => setAudioUrl(url))
-      .catch(() => {});
   }, [ready, hasAccess]);
 
   function togglePlay() {

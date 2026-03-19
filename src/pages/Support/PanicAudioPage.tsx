@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { getAllProducts } from '../../data/products';
 import { useMyPurchases } from '../../hooks/useMyPurchases';
-import { getUserEmail } from '../../utils/user';
 
 const TOAST_KEY = 'toast_shown_panic_wave';
 
@@ -22,7 +21,8 @@ export function PanicAudioPage() {
   );
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const audioUrl = '/panic_wave.mp3';
+  const [audioError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -36,14 +36,6 @@ export function PanicAudioPage() {
       sessionStorage.setItem(TOAST_KEY, '1');
     }
 
-    // Fetch signed audio URL
-    const email = getUserEmail();
-    if (!email) return;
-
-    fetch(`/api/audio?file=panic_wave&email=${encodeURIComponent(email)}`)
-      .then((r) => r.ok ? r.json() : Promise.reject())
-      .then(({ url }: { url: string }) => setAudioUrl(url))
-      .catch(() => toast.error('Не вдалось завантажити аудіо'));
   }, [ready, hasSupportAccess, navigate]);
 
   function togglePlay() {
@@ -83,7 +75,12 @@ export function PanicAudioPage() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6">
-          {!audioUrl ? (
+          {audioError ? (
+            <p className="text-white/40 text-sm text-center">
+              Не вдалось завантажити аудіо.<br />
+              Напишіть нам: <a href="mailto:info@tryvoga.net" className="text-[#f5a623]">info@tryvoga.net</a>
+            </p>
+          ) : !audioUrl ? (
             <div className="w-20 h-20 flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
             </div>
