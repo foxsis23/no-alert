@@ -21,8 +21,8 @@ export function PanicAudioPage() {
   );
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const audioUrl = '/panic_wave.mp3';
-  const [audioError] = useState(false);
+  const audioUrl = '/panic-wave.mp3';
+  const [audioError, setAudioError] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -41,8 +41,14 @@ export function PanicAudioPage() {
   function togglePlay() {
     const audio = audioRef.current;
     if (!audio) return;
-    if (isPlaying) audio.pause();
-    else void audio.play();
+    if (isPlaying) {
+      audio.pause();
+    } else {
+      audio.play().catch((err) => {
+        console.error('Audio play error:', err);
+        setAudioError(true);
+      });
+    }
   }
 
   function handleSeek(e: React.ChangeEvent<HTMLInputElement>) {
