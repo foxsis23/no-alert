@@ -16,10 +16,10 @@ function getResultPath(productId: string): string {
 
 const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {
   panic_cycle: 'support_7_days',
-  hypervigilance: 'course',
-  catastrophizing: 'course',
-  background_anxiety: 'course',
-  overload: 'support_7_days',
+  body_hyperfocus: 'course',
+  fear_of_recurrence: 'course',
+  background_tension: 'course',
+  combined_type: 'support_7_days',
 };
 
 export function CheckoutPage() {
@@ -68,6 +68,7 @@ export function CheckoutPage() {
         resultUrl: getResultPath(selectedProduct.id),
       });
     } catch (err) {
+      trackEvent('payment_fail', { product_id: selectedProduct?.id });
       setError(
         err instanceof Error ? err.message : 'Помилка при переході до оплати',
       );

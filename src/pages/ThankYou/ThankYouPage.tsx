@@ -14,7 +14,8 @@ export function ThankYouPage() {
 
   useEffect(() => {
     if (!result) navigate('/', { replace: true });
-  }, [result, navigate]);
+    else trackEvent('open_delivery', { product_id: selectedProduct?.id });
+  }, [result, navigate, selectedProduct?.id]);
 
   if (!result) return null;
 
@@ -25,7 +26,7 @@ export function ThankYouPage() {
     .slice(0, 2);
 
   function handleUpsell(product: Product) {
-    trackEvent('upsell_purchase', { product_id: product.id });
+    trackEvent(`click_upsell_${product.id}`, { product_id: product.id });
     setSelectedProduct(product);
     navigate('/checkout');
   }

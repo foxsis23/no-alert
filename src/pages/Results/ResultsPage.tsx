@@ -11,19 +11,19 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
     badge: 'bg-red-500/15 text-red-400 border-red-500/30',
     dot: 'bg-red-400',
   },
-  hypervigilance: {
+  body_hyperfocus: {
     badge: 'bg-orange-500/15 text-orange-400 border-orange-500/30',
     dot: 'bg-orange-400',
   },
-  catastrophizing: {
+  fear_of_recurrence: {
     badge: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
     dot: 'bg-yellow-400',
   },
-  background_anxiety: {
+  background_tension: {
     badge: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
     dot: 'bg-blue-400',
   },
-  overload: {
+  combined_type: {
     badge: 'bg-purple-500/15 text-purple-400 border-purple-500/30',
     dot: 'bg-purple-400',
   },
@@ -107,7 +107,7 @@ export function ResultsPage() {
                 variant="primary"
                 size="lg"
                 fullWidth
-                onClick={() => { trackEvent('click_paywall'); navigate('/checkout'); }}
+                onClick={() => { trackEvent('click_paywall_29'); navigate('/checkout'); }}
               >
                 Розблокувати — від 29 грн
               </Button>

@@ -12,9 +12,17 @@ export function Footer() {
           Угода користувача
         </Link>
         <span>|</span>
+        <Link to="/offer" className="hover:text-white/70 transition-colors">
+          Публічна оферта
+        </Link>
+        <span>|</span>
+        <Link to="/disclaimer" className="hover:text-white/70 transition-colors">
+          Медичне застереження
+        </Link>
+        <span>|</span>
         <span>© тривога.net</span>
         <span>|</span>
-        <span>ТОВ «Фінанс-сервіс»</span>
+        <span>ТОВ «Медичні системи»</span>
       </div>
     </footer>
   );

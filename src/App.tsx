@@ -12,6 +12,8 @@ import { SessionPage } from './pages/Support/SessionPage';
 import { PanicAudioPage } from './pages/Support/PanicAudioPage';
 import { TermsPage } from './pages/Legal/TermsPage';
 import { PrivacyPage } from './pages/Legal/PrivacyPage';
+import { OfferPage } from './pages/Legal/OfferPage';
+import { DisclaimerPage } from './pages/Legal/DisclaimerPage';
 
 export default function App() {
   return (
@@ -30,6 +32,8 @@ export default function App() {
         <Route path="/support/session/:type" element={<SessionPage />} />
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/offer" element={<OfferPage />} />
+        <Route path="/disclaimer" element={<DisclaimerPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

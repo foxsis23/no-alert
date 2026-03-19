@@ -1,8 +1,3 @@
-// ⚠️  SECURITY NOTE:
-// VITE_ env vars are bundled into the client — the private key becomes visible
-// in the browser. For production, generate the signature in a serverless function
-// (Vercel Edge / Netlify Functions) and expose only a signed-redirect endpoint.
-
 const LIQPAY_CHECKOUT_URL = 'https://www.liqpay.ua/api/3/checkout';
 
 export interface LiqPayCheckoutParams {
@@ -15,61 +10,24 @@ export interface LiqPayCheckoutParams {
 }
 
 /**
- * SHA-1 hash → raw binary → base64
- * LiqPay signature = base64(sha1(private_key + data + private_key))
- */
-async function sha1Base64(input: string): Promise<string> {
-  const bytes = new TextEncoder().encode(input);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', bytes);
-  const binary = Array.from(new Uint8Array(hashBuffer))
-    .map((b) => String.fromCharCode(b))
-    .join('');
-  return btoa(binary);
-}
-
-/**
- * JSON object → UTF-8 bytes → base64
- * (handles Cyrillic / Unicode in description fields correctly)
- */
-function encodeData(payload: object): string {
-  const json = JSON.stringify(payload);
-  const bytes = new TextEncoder().encode(json);
-  let binary = '';
-  bytes.forEach((b) => (binary += String.fromCharCode(b)));
-  return btoa(binary);
-}
-
-/**
- * Generates LiqPay `data` + `signature` and submits a hidden POST form
- * that redirects the browser to the LiqPay checkout page.
+ * Calls the server-side /api/liqpay-checkout to get signed data,
+ * then submits a hidden POST form to LiqPay checkout.
+ * Private key never leaves the server.
  */
 export async function redirectToLiqPay(params: LiqPayCheckoutParams): Promise<void> {
-  const publicKey = import.meta.env.VITE_LIQPAY_PUBLIC_KEY;
-  const privateKey = import.meta.env.VITE_LIQPAY_PRIVATE_KEY;
+  const response = await fetch('/api/liqpay-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
 
-  if (!publicKey || !privateKey) {
-    throw new Error('LiqPay keys are not configured. Add VITE_LIQPAY_PUBLIC_KEY and VITE_LIQPAY_PRIVATE_KEY to .env');
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error((err as { error?: string }).error ?? 'Failed to initiate payment');
   }
 
-  const payload = {
-    public_key: publicKey,
-    version: '3',
-    action: 'pay',
-    amount: params.amount,
-    currency: 'UAH',
-    description: params.description,
-    order_id: params.orderId,
-    customer: params.customerName,
-    customer_email: params.customerEmail,
-    result_url: `${window.location.origin}${params.resultUrl ?? '/thank-you'}`,
-    server_url: `${window.location.origin}/api/liqpay-callback`,
-    language: 'uk',
-  };
+  const { data, signature } = await response.json() as { data: string; signature: string };
 
-  const data = encodeData(payload);
-  const signature = await sha1Base64(privateKey + data + privateKey);
-
-  // LiqPay requires a POST (not GET redirect) — submit a hidden form
   const form = document.createElement('form');
   form.method = 'POST';
   form.action = LIQPAY_CHECKOUT_URL;

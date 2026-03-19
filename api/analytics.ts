@@ -1,0 +1,26 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { supabase } from './lib/supabase';
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const { event, params, sessionId } = req.body as {
+    event: string;
+    params?: Record<string, unknown>;
+    sessionId?: string;
+  };
+
+  if (!event) {
+    return res.status(400).json({ error: 'Missing event' });
+  }
+
+  await supabase.from('events').insert({
+    event_type: event,
+    metadata: params ?? null,
+    session_id: sessionId ?? null,
+  });
+
+  return res.status(200).json({ ok: true });
+}

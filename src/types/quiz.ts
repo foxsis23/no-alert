@@ -11,10 +11,10 @@ export interface AnswerOption {
 
 export type AnxietyType =
   | 'panic_cycle'
-  | 'hypervigilance'
-  | 'catastrophizing'
-  | 'background_anxiety'
-  | 'overload';
+  | 'body_hyperfocus'
+  | 'fear_of_recurrence'
+  | 'background_tension'
+  | 'combined_type';
 
 export interface AnxietyResult {
   type: AnxietyType;

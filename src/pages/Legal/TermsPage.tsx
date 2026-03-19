@@ -73,7 +73,7 @@ export function TermsPage() {
 
             <section>
               <h2 className="font-bold text-white mb-2">8. Контактна інформація</h2>
-              <p>З усіх питань щодо виконання цієї Угоди звертайтесь, електронна пошта: <a href="mailto:info@fins.com.ua" className="text-[#f5a623] hover:underline">info@fins.com.ua</a></p>
+              <p>З усіх питань щодо виконання цієї Угоди звертайтесь, електронна пошта: <a href="mailto:info@tryvoga.net" className="text-[#f5a623] hover:underline">info@tryvoga.net</a></p>
             </section>
 
           </div>

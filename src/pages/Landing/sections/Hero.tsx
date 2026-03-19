@@ -31,7 +31,7 @@ export function Hero() {
         <Button
           variant="primary"
           size="lg"
-          onClick={() => navigate('/test')}
+          onClick={() => { trackEvent('click_cta_hero'); navigate('/test'); }}
           className="min-w-48 mt-2 text-xl shadow-lg shadow-[#f5a623]/20"
         >
           Почати
