@@ -21,6 +21,18 @@ create table if not exists events (
   created_at timestamptz default now()
 );
 
+create table if not exists course_blocks (
+  id uuid default gen_random_uuid() primary key,
+  product_id text not null,
+  order_index integer not null default 0,
+  title text not null,
+  description text,
+  video_url text,
+  text_content text,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 -- Index for faster admin queries
 create index if not exists orders_status_idx on orders(status);
 create index if not exists orders_created_at_idx on orders(created_at desc);

@@ -16,6 +16,7 @@ import { OfferPage } from './pages/Legal/OfferPage';
 import { DisclaimerPage } from './pages/Legal/DisclaimerPage';
 import { AccessPage } from './pages/Access/AccessPage';
 import { MyMaterialsPage } from './pages/MyMaterials/MyMaterialsPage';
+import { AdminPage } from './pages/Admin/AdminPage';
 
 export default function App() {
   return (
@@ -38,6 +39,7 @@ export default function App() {
         <Route path="/disclaimer" element={<DisclaimerPage />} />
         <Route path="/access/:token" element={<AccessPage />} />
         <Route path="/my-materials" element={<MyMaterialsPage />} />
+        <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

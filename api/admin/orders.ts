@@ -20,27 +20,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const page = Number(req.query.page ?? 1);
     const limit = 50;
     const offset = (page - 1) * limit;
+    const statusFilter = req.query.status as string | undefined;
+    const emailSearch = req.query.email as string | undefined;
+    const productFilter = req.query.product_id as string | undefined;
 
-    const { data: orders, error, count } = await supabase
+    let query = supabase
       .from('orders')
       .select('*', { count: 'exact' })
-      .eq('status', 'success')
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
+
+    if (statusFilter && statusFilter !== 'all') {
+      query = query.eq('status', statusFilter);
+    } else if (!statusFilter) {
+      query = query.eq('status', 'success');
+    }
+
+    if (emailSearch) {
+      query = query.ilike('email', `%${emailSearch}%`);
+    }
+
+    if (productFilter) {
+      query = query.eq('product_id', productFilter);
+    }
+
+    const { data: orders, error, count } = await query;
 
     if (error) {
       return res.status(500).json({ error: error.message });
     }
 
-    // Revenue summary
-    const { data: summary } = await supabase
-      .from('orders')
-      .select('amount')
-      .eq('status', 'success');
-
-    const totalRevenue = summary?.reduce((sum, o) => sum + (o.amount ?? 0), 0) ?? 0;
-
-    return res.status(200).json({ orders, total: count, totalRevenue, page });
+    return res.status(200).json({ orders, total: count, page });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
