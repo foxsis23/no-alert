@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const APP_URL = process.env.APP_URL || 'https://тривога.net';
+const APP_URL = (process.env.APP_URL || 'https://тривога.net').replace(/\/$/, '');
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

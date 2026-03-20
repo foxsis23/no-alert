@@ -5,6 +5,7 @@ import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { trackEvent } from '../../utils/analytics';
 import { useConfig } from '../../context/ConfigContext';
+import { useMyPurchases } from '../../hooks/useMyPurchases';
 import { PRODUCTS } from '../../data/products';
 import type { AnxietyType } from '../../types/quiz';
 
@@ -33,7 +34,8 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 
 export function ResultsPage() {
   const navigate = useNavigate();
-  const { result, reset, purchasedProductIds } = useQuizStore();
+  const { result, reset } = useQuizStore();
+  const { productIds, ready: purchasesReady } = useMyPurchases();
   const config = useConfig();
 
   useEffect(() => {
@@ -51,8 +53,8 @@ export function ResultsPage() {
     cfg?.preview_phrase_2 ?? result.previewPhrases[1],
   ].filter(Boolean);
 
-  // Check if user already purchased any product
-  const hasPurchased = PRODUCTS.some((p) => purchasedProductIds.includes(p.id));
+  // Check if user already purchased any product (localStorage + Supabase via email)
+  const hasPurchased = purchasesReady && PRODUCTS.some((p) => productIds.includes(p.id));
 
   // Cheapest enabled product price for CTA
   const enabledProducts = PRODUCTS.filter((p) => config?.products[p.id]?.is_enabled !== false);
