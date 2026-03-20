@@ -10,7 +10,7 @@ export function ProductCard({ product, isSelected, onSelect }: ProductCardProps)
   return (
     <button
       onClick={onSelect}
-      className={`relative rounded-xl overflow-hidden text-left w-full transition-all duration-200 flex flex-col cursor-pointer
+      className={`relative rounded-xl overflow-hidden text-left w-full h-full transition-all duration-200 flex flex-col cursor-pointer
         ${isSelected ? 'ring-2 ring-[#f5a623] scale-[1.02]' : 'ring-1 ring-white/10 hover:ring-white/30'}
       `}
     >
@@ -22,7 +22,7 @@ export function ProductCard({ product, isSelected, onSelect }: ProductCardProps)
         />
       </div>
 
-      <div className={`p-4 ${product.isHighlighted ? 'bg-[#e53e3e]' : 'bg-[#1a1a2e]'}`}>
+      <div className={`flex-1 p-4 ${product.isHighlighted ? 'bg-[#e53e3e]' : 'bg-[#1a1a2e]'}`}>
         <p className="font-bold text-white text-sm">{product.title}</p>
         <p className={`text-sm mt-1 font-semibold ${product.isHighlighted ? 'text-white' : 'text-[#f5a623]'}`}>
           {product.priceLabel}
