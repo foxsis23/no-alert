@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { UPSELL_MAP, getAllProducts } from '../../data/products';
+import { useConfig } from '../../context/ConfigContext';
 
 function getContentPath(productId: string): string {
   if (productId === 'basic' || productId === 'support_7_days') return '/support';
@@ -16,6 +17,7 @@ import type { Product } from '../../types/product';
 export function ThankYouPage() {
   const navigate = useNavigate();
   const { result, selectedProduct, setSelectedProduct, addPurchasedProduct, reset } = useQuizStore();
+  const config = useConfig();
 
   useEffect(() => {
     if (!result) navigate('/', { replace: true });
@@ -31,7 +33,7 @@ export function ThankYouPage() {
   const upsellIds = selectedProduct ? (UPSELL_MAP[selectedProduct.id] ?? []) : [];
   const upsellProducts = upsellIds
     .map((id) => getAllProducts().find((p) => p.id === id))
-    .filter((p): p is Product => p !== undefined)
+    .filter((p): p is Product => p !== undefined && config?.products[p.id]?.is_enabled !== false)
     .slice(0, 2);
 
   function handleUpsell(product: Product) {

@@ -28,10 +28,20 @@ export function ConfigProvider({ children }: { children: React.ReactNode }) {
   const [config, setConfig] = useState<AppConfig | null>(null);
 
   useEffect(() => {
-    fetch('/api/config')
-      .then((r) => r.json())
-      .then((data: AppConfig) => setConfig(data))
-      .catch(() => { /* use defaults from hardcoded data */ });
+    function load() {
+      fetch('/api/config')
+        .then((r) => r.json())
+        .then((data: AppConfig) => setConfig(data))
+        .catch(() => { /* use defaults from hardcoded data */ });
+    }
+
+    load();
+
+    function handleVisibility() {
+      if (document.visibilityState === 'visible') load();
+    }
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
   }, []);
 
   return (

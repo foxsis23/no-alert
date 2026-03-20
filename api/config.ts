@@ -97,7 +97,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
   }
   try {
     const config = await getMergedConfig();
-    res.setHeader('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+    res.setHeader('Cache-Control', 'no-store');
     return res.status(200).json(config);
   } catch {
     return res.status(500).json({ error: 'Internal server error' });
