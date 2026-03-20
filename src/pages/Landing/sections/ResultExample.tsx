@@ -1,8 +1,18 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
+import { useConfig } from '../../../context/ConfigContext';
+import { PRODUCTS } from '../../../data/products';
 
 export function ResultExample() {
   const navigate = useNavigate();
+  const config = useConfig();
+
+  const enabledProducts = PRODUCTS.filter((p) => config?.products[p.id]?.is_enabled !== false);
+  const minPrice = enabledProducts.reduce<number | null>((min, p) => {
+    const price = config?.products[p.id]?.price ?? p.price ?? null;
+    if (price === null) return min;
+    return min === null || price < min ? price : min;
+  }, null);
 
   return (
     <section className="py-20 px-6">
@@ -55,7 +65,7 @@ export function ResultExample() {
             onClick={() => navigate('/test')}
             className="min-w-64"
           >
-            Пройти тест — від 29 грн
+            {minPrice !== null ? `Пройти тест — від ${minPrice} грн` : 'Пройти тест'}
           </Button>
           <p className="text-white/30 text-xs">Результат за 2 хвилини. Повний аналіз одразу після оплати.</p>
         </div>

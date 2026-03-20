@@ -5,6 +5,7 @@ import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { trackEvent } from '../../utils/analytics';
 import { useConfig } from '../../context/ConfigContext';
+import { PRODUCTS } from '../../data/products';
 import type { AnxietyType } from '../../types/quiz';
 
 const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
@@ -32,7 +33,7 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 
 export function ResultsPage() {
   const navigate = useNavigate();
-  const { result, reset } = useQuizStore();
+  const { result, reset, purchasedProductIds } = useQuizStore();
   const config = useConfig();
 
   useEffect(() => {
@@ -49,6 +50,17 @@ export function ResultsPage() {
     cfg?.preview_phrase_1 ?? result.previewPhrases[0],
     cfg?.preview_phrase_2 ?? result.previewPhrases[1],
   ].filter(Boolean);
+
+  // Check if user already purchased any product
+  const hasPurchased = PRODUCTS.some((p) => purchasedProductIds.includes(p.id));
+
+  // Cheapest enabled product price for CTA
+  const enabledProducts = PRODUCTS.filter((p) => config?.products[p.id]?.is_enabled !== false);
+  const minPrice = enabledProducts.reduce<number | null>((min, p) => {
+    const price = config?.products[p.id]?.price ?? p.price ?? null;
+    if (price === null) return min;
+    return min === null || price < min ? price : min;
+  }, null);
 
   function handleRestart() {
     reset();
@@ -86,41 +98,62 @@ export function ResultsPage() {
             ))}
           </div>
 
-          {/* Paywall section */}
-          <div className="relative rounded-2xl overflow-hidden border border-white/10">
-            {/* Blurred content behind the gate */}
-            <div
-              className="flex flex-col gap-4 p-5 pointer-events-none select-none"
-              style={{ filter: 'blur(6px)' }}
-              aria-hidden="true"
-            >
-              <p className="text-white/70 text-base leading-relaxed">
-                Детальний опис твого типу тривоги та причини його появи. Що відбувається в нервовій
-                системі і чому симптоми саме такі.
+          {hasPurchased ? (
+            /* Unlocked: show full content */
+            <div className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+              <p className="text-white/80 text-base leading-relaxed">
+                {cfg?.full_description ?? result.description}
               </p>
               <div className="bg-white/5 border border-white/10 rounded-xl p-5">
                 <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
                 <p className="text-white/90 text-base">
-                  Персоналізований план дій на основі твого типу тривоги.
+                  {cfg?.recommendation ?? result.recommendation}
                 </p>
               </div>
-            </div>
-
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/80 to-transparent flex flex-col items-center justify-end pb-6 px-5 gap-3">
-              <p className="text-white/60 text-sm text-center">
-                Повний аналіз + персональний план дій
-              </p>
               <Button
                 variant="primary"
                 size="lg"
                 fullWidth
-                onClick={() => { trackEvent('click_paywall_29'); navigate('/checkout'); }}
+                onClick={() => navigate('/my-materials')}
               >
-                Розблокувати — від 29 грн
+                Мої матеріали →
               </Button>
             </div>
-          </div>
+          ) : (
+            /* Paywall */
+            <div className="relative rounded-2xl overflow-hidden border border-white/10">
+              <div
+                className="flex flex-col gap-4 p-5 pointer-events-none select-none"
+                style={{ filter: 'blur(6px)' }}
+                aria-hidden="true"
+              >
+                <p className="text-white/70 text-base leading-relaxed">
+                  Детальний опис твого типу тривоги та причини його появи. Що відбувається в нервовій
+                  системі і чому симптоми саме такі.
+                </p>
+                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+                  <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
+                  <p className="text-white/90 text-base">
+                    Персоналізований план дій на основі твого типу тривоги.
+                  </p>
+                </div>
+              </div>
+
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/80 to-transparent flex flex-col items-center justify-end pb-6 px-5 gap-3">
+                <p className="text-white/60 text-sm text-center">
+                  Повний аналіз + персональний план дій
+                </p>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  onClick={() => { trackEvent('click_paywall_29'); navigate('/checkout'); }}
+                >
+                  {minPrice !== null ? `Розблокувати — від ${minPrice} грн` : 'Розблокувати'}
+                </Button>
+              </div>
+            </div>
+          )}
 
           {/* Restart */}
           <Button variant="ghost" size="md" fullWidth onClick={handleRestart}>
