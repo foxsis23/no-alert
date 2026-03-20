@@ -109,7 +109,7 @@ export function CheckoutPage() {
             <p className="text-white/50 mt-2">Обрана допомога буде доступна одразу після оплати</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {enabledProducts.map((product) => {
               const displayProduct = {
                 ...product,
@@ -117,13 +117,12 @@ export function CheckoutPage() {
                 priceLabel: `${getEffectivePrice(product)} грн`,
               };
               return (
-                <div key={product.id} className="w-full sm:w-44">
                 <ProductCard
+                  key={product.id}
                   product={displayProduct}
                   isSelected={selectedProduct?.id === product.id}
                   onSelect={() => setSelectedProduct(product)}
                 />
-              </div>
               );
             })}
           </div>

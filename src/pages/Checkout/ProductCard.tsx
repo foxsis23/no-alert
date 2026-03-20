@@ -14,7 +14,7 @@ export function ProductCard({ product, isSelected, onSelect }: ProductCardProps)
         ${isSelected ? 'ring-2 ring-[#f5a623] scale-[1.02]' : 'ring-1 ring-white/10 hover:ring-white/30'}
       `}
     >
-      <div className="flex-1 flex items-center justify-center overflow-hidden" style={{ backgroundColor: product.imagePlaceholder }}>
+      <div className="h-36 shrink-0 overflow-hidden" style={{ backgroundColor: product.imagePlaceholder }}>
         <img
           src={product.imageSrc}
           alt={product.title}
