@@ -2,6 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
 import { UPSELL_MAP, getAllProducts } from '../../data/products';
+
+function getContentPath(productId: string): string {
+  if (productId === 'basic' || productId === 'support_7_days') return '/support';
+  return `/course/${productId}`;
+}
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { Footer } from '../../components/layout/Footer';
@@ -10,12 +15,16 @@ import type { Product } from '../../types/product';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { result, selectedProduct, setSelectedProduct, reset } = useQuizStore();
+  const { result, selectedProduct, setSelectedProduct, addPurchasedProduct, reset } = useQuizStore();
 
   useEffect(() => {
     if (!result) navigate('/', { replace: true });
-    else trackEvent('open_delivery', { product_id: selectedProduct?.id });
-  }, [result, navigate, selectedProduct?.id]);
+    else {
+      trackEvent('open_delivery', { product_id: selectedProduct?.id });
+      // Grant immediate local access so the user can open the content right away
+      if (selectedProduct) addPurchasedProduct(selectedProduct.id);
+    }
+  }, [result, navigate, selectedProduct, addPurchasedProduct]);
 
   if (!result) return null;
 
@@ -62,10 +71,15 @@ export function ThankYouPage() {
             </p>
           </div>
 
-          {/* Go to support if product includes support */}
-          {selectedProduct?.hasSupport && (
-            <Button variant="primary" size="lg" fullWidth onClick={() => navigate('/support')}>
-              Перейти в підтримку {'\u2192'}
+          {/* Open purchased content immediately */}
+          {selectedProduct && (
+            <Button
+              variant="primary"
+              size="lg"
+              fullWidth
+              onClick={() => navigate(getContentPath(selectedProduct.id))}
+            >
+              Відкрити {'\u00AB'}{selectedProduct.title}{'\u00BB'} {'\u2192'}
             </Button>
           )}
 

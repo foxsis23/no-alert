@@ -4,6 +4,7 @@ import { useQuizStore } from '../../store/quizStore';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { trackEvent } from '../../utils/analytics';
+import { useConfig } from '../../context/ConfigContext';
 import type { AnxietyType } from '../../types/quiz';
 
 const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
@@ -32,6 +33,7 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 export function ResultsPage() {
   const navigate = useNavigate();
   const { result, reset } = useQuizStore();
+  const config = useConfig();
 
   useEffect(() => {
     if (!result) navigate('/test', { replace: true });
@@ -41,6 +43,12 @@ export function ResultsPage() {
   if (!result) return null;
 
   const colors = TYPE_COLORS[result.type];
+  const cfg = config?.results[result.type];
+  const title = cfg?.title ?? result.title;
+  const phrases = [
+    cfg?.preview_phrase_1 ?? result.previewPhrases[0],
+    cfg?.preview_phrase_2 ?? result.previewPhrases[1],
+  ].filter(Boolean);
 
   function handleRestart() {
     reset();
@@ -64,11 +72,11 @@ export function ResultsPage() {
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl font-black text-white text-center">{result.title}</h1>
+          <h1 className="text-4xl font-black text-white text-center">{title}</h1>
 
           {/* Free preview phrases */}
           <div className="flex flex-col gap-3">
-            {result.previewPhrases.map((phrase, i) => (
+            {phrases.map((phrase, i) => (
               <div
                 key={i}
                 className="bg-white/5 border border-white/10 rounded-xl px-5 py-4 text-white/80 text-base leading-relaxed"

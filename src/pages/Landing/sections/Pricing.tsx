@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { PRODUCTS, getAllProducts } from '../../../data/products';
 import { useQuizStore } from '../../../store/quizStore';
+import { useConfig } from '../../../context/ConfigContext';
 
 export function Pricing() {
   const navigate = useNavigate();
   const { purchasedProductIds } = useQuizStore();
+  const config = useConfig();
   const allProducts = getAllProducts();
 
   function isPurchased(productId: string) {
@@ -19,13 +21,19 @@ export function Pricing() {
     return '/checkout';
   }
 
+  const visibleProducts = PRODUCTS.filter(
+    (p) => config?.products[p.id]?.is_enabled !== false
+  );
+
   return (
     <section className="py-16 px-6 bg-[#0d0d1a] border-t border-white/5">
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl font-bold text-white text-center mb-10">Тарифи</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {PRODUCTS.map((product) => {
+          {visibleProducts.map((product) => {
             const purchased = isPurchased(product.id);
+            const configPrice = config?.products[product.id]?.price;
+            const displayPrice = configPrice != null ? configPrice : product.price;
             return (
               <button
                 key={product.id}
@@ -47,7 +55,7 @@ export function Pricing() {
                 >
                   <p className="font-bold text-white text-base">{product.title}</p>
                   <p className={`text-sm mt-1 ${product.isHighlighted ? 'text-white/90' : 'text-[#f5a623]'}`}>
-                    {product.priceLabel}
+                    {displayPrice} грн
                   </p>
                 </div>
               </button>

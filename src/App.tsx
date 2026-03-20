@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import { ConfigProvider } from './context/ConfigContext';
 import { LandingPage } from './pages/Landing/LandingPage';
 import { QuizPage } from './pages/Quiz/QuizPage';
 import { ResultsPage } from './pages/Results/ResultsPage';
@@ -20,28 +21,30 @@ import { AdminPage } from './pages/Admin/AdminPage';
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Toaster position="top-right" theme="dark" richColors />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/test" element={<QuizPage />} />
-        <Route path="/result" element={<ResultsPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
-        <Route path="/thank-you" element={<ThankYouPage />} />
-        <Route path="/course/basic" element={<CourseBasicPage />} />
-        <Route path="/course/:productId" element={<CoursePage />} />
-        <Route path="/support" element={<SupportPage />} />
-        <Route path="/support/session/panic_wave" element={<PanicAudioPage />} />
-        <Route path="/support/session/:type" element={<SessionPage />} />
-        <Route path="/terms" element={<TermsPage />} />
-        <Route path="/privacy" element={<PrivacyPage />} />
-        <Route path="/offer" element={<OfferPage />} />
-        <Route path="/disclaimer" element={<DisclaimerPage />} />
-        <Route path="/access/:token" element={<AccessPage />} />
-        <Route path="/my-materials" element={<MyMaterialsPage />} />
-        <Route path="/admin" element={<AdminPage />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+    <ConfigProvider>
+      <BrowserRouter>
+        <Toaster position="top-right" theme="dark" richColors />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/test" element={<QuizPage />} />
+          <Route path="/result" element={<ResultsPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/thank-you" element={<ThankYouPage />} />
+          <Route path="/course/basic" element={<CourseBasicPage />} />
+          <Route path="/course/:productId" element={<CoursePage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/support/session/panic_wave" element={<PanicAudioPage />} />
+          <Route path="/support/session/:type" element={<SessionPage />} />
+          <Route path="/terms" element={<TermsPage />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/offer" element={<OfferPage />} />
+          <Route path="/disclaimer" element={<DisclaimerPage />} />
+          <Route path="/access/:token" element={<AccessPage />} />
+          <Route path="/my-materials" element={<MyMaterialsPage />} />
+          <Route path="/admin" element={<AdminPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ConfigProvider>
   );
 }

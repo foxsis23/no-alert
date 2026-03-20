@@ -1,11 +1,20 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getAllProducts } from '../../data/products';
+import type { AppConfig } from '../../context/ConfigContext';
 
 const PRODUCT_MAP: Record<string, string> = Object.fromEntries(
   getAllProducts().map((p) => [p.id, p.title])
 );
 
 const ALL_PRODUCT_IDS = getAllProducts().map((p) => p.id);
+
+const RESULT_TYPE_LABELS: Record<string, string> = {
+  panic_cycle: 'Панічний цикл',
+  body_hyperfocus: 'Тілесна гіперфіксація',
+  fear_of_recurrence: 'Страх повторення',
+  background_tension: 'Фонова напруга',
+  combined_type: 'Змішана тривога',
+};
 
 interface Order {
   id: string;
@@ -134,7 +143,6 @@ function StatsTab({ stats }: { stats: Stats }) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Загальна виручка" value={`${stats.totalRevenue.toLocaleString('uk-UA')} грн`} accent />
         <StatCard label="Цього місяця" value={`${stats.monthRevenue.toLocaleString('uk-UA')} грн`} />
@@ -143,7 +151,6 @@ function StatsTab({ stats }: { stats: Stats }) {
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
-        {/* Revenue by product */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
           <h3 className="text-white font-semibold mb-4">Виручка по продуктах</h3>
           {revenueRows.length === 0 ? (
@@ -167,7 +174,6 @@ function StatsTab({ stats }: { stats: Stats }) {
           )}
         </div>
 
-        {/* Top events */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
           <h3 className="text-white font-semibold mb-4">Топ події</h3>
           {topEvents.length === 0 ? (
@@ -209,7 +215,6 @@ function OrdersTab({ password }: { password: string }) {
   const [statusFilter, setStatusFilter] = useState('success');
   const [productFilter, setProductFilter] = useState('');
 
-  // Debounced email search
   const [emailQuery, setEmailQuery] = useState('');
   useEffect(() => {
     const t = setTimeout(() => {
@@ -246,7 +251,6 @@ function OrdersTab({ password }: { password: string }) {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <input
           type="search"
@@ -280,7 +284,6 @@ function OrdersTab({ password }: { password: string }) {
         </span>
       </div>
 
-      {/* Table */}
       <div className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
         {loading ? (
           <div className="flex items-center justify-center py-16">
@@ -329,7 +332,6 @@ function OrdersTab({ password }: { password: string }) {
         )}
       </div>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3">
           <button
@@ -355,309 +357,382 @@ function OrdersTab({ password }: { password: string }) {
   );
 }
 
-// ── Course Tab ────────────────────────────────────────────────────────────────
+// ── Products Tab ──────────────────────────────────────────────────────────────
 
-interface CourseBlock {
-  id: string;
-  product_id: string;
-  order_index: number;
-  title: string;
-  description: string | null;
-  video_url: string | null;
-  text_content: string | null;
+type ProductRow = AppConfig['products'][string] & { id: string; text_content: string | null };
+
+function ProductsTab({ password, config }: { password: string; config: AppConfig | null }) {
+  const allProducts = getAllProducts();
+
+  const [rows, setRows] = useState<ProductRow[]>(() =>
+    allProducts.map((p) => ({
+      id: p.id,
+      price: config?.products[p.id]?.price ?? (p.price ?? 0),
+      is_enabled: config?.products[p.id]?.is_enabled ?? true,
+      audio_url: config?.products[p.id]?.audio_url ?? null,
+      video_url: config?.products[p.id]?.video_url ?? null,
+      text_content: config?.products[p.id]?.text_content ?? null,
+    }))
+  );
+
+  useEffect(() => {
+    if (!config) return;
+    setRows(
+      allProducts.map((p) => ({
+        id: p.id,
+        price: config.products[p.id]?.price ?? (p.price ?? 0),
+        is_enabled: config.products[p.id]?.is_enabled ?? true,
+        audio_url: config.products[p.id]?.audio_url ?? null,
+        video_url: config.products[p.id]?.video_url ?? null,
+        text_content: config.products[p.id]?.text_content ?? null,
+      }))
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [config]);
+
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+
+  function updateRow(id: string, patch: Partial<ProductRow>) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
+  }
+
+  async function saveRow(id: string) {
+    const row = rows.find((r) => r.id === id);
+    if (!row) return;
+    setSaving(id);
+    try {
+      const res = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
+        body: JSON.stringify({
+          table: 'products',
+          id,
+          updates: {
+            price: Number(row.price),
+            is_enabled: row.is_enabled,
+            audio_url: row.audio_url || null,
+            video_url: row.video_url || null,
+            text_content: row.text_content || null,
+          },
+        }),
+      });
+      if (res.ok) {
+        setSaved(id);
+        setTimeout(() => setSaved(null), 2000);
+      }
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const inputCls = 'bg-white/5 border border-white/15 rounded-xl px-3 py-2 text-white placeholder-white/25 text-sm focus:outline-none focus:border-[#f5a623]/50 transition-colors';
+
+  return (
+    <div className="flex flex-col gap-4">
+      {rows.map((row) => {
+        const productTitle = PRODUCT_MAP[row.id] ?? row.id;
+        const isDisabled = !row.is_enabled;
+        return (
+          <div
+            key={row.id}
+            className={`bg-white/5 border rounded-2xl p-5 flex flex-col gap-4 ${isDisabled ? 'border-white/5 opacity-60' : 'border-white/10'}`}
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-white font-semibold">{productTitle}</p>
+                <p className="text-white/30 text-xs font-mono">{row.id}</p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span className="text-white/50 text-sm">Увімкнено</span>
+                <input
+                  type="checkbox"
+                  checked={row.is_enabled}
+                  onChange={(e) => updateRow(row.id, { is_enabled: e.target.checked })}
+                  className="w-4 h-4 accent-[#f5a623]"
+                />
+              </label>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-white/40 text-xs block mb-1">Ціна (грн)</label>
+                <input
+                  type="number"
+                  min={0}
+                  value={row.price}
+                  onChange={(e) => updateRow(row.id, { price: Number(e.target.value) })}
+                  className={`${inputCls} w-full`}
+                />
+              </div>
+              <div>
+                <label className="text-white/40 text-xs block mb-1">Audio URL</label>
+                <input
+                  type="url"
+                  value={row.audio_url ?? ''}
+                  onChange={(e) => updateRow(row.id, { audio_url: e.target.value || null })}
+                  placeholder="https://..."
+                  className={`${inputCls} w-full`}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-white/40 text-xs block mb-1">Video URL (YouTube)</label>
+                <input
+                  type="url"
+                  value={row.video_url ?? ''}
+                  onChange={(e) => updateRow(row.id, { video_url: e.target.value || null })}
+                  placeholder="https://youtube.com/..."
+                  className={`${inputCls} w-full`}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="text-white/40 text-xs block mb-1">Текстовий контент</label>
+                <textarea
+                  value={row.text_content ?? ''}
+                  onChange={(e) => updateRow(row.id, { text_content: e.target.value || null })}
+                  placeholder="Текст, який побачить користувач після покупки..."
+                  rows={5}
+                  className={`${inputCls} w-full resize-none`}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => void saveRow(row.id)}
+                disabled={saving === row.id}
+                className="px-5 py-2 rounded-xl bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black text-sm font-semibold transition-colors"
+              >
+                {saving === row.id ? 'Збереження...' : saved === row.id ? 'Збережено ✓' : 'Зберегти'}
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-const EMPTY_FORM = { title: '', description: '', video_url: '', text_content: '' };
+// ── Landing Tab ───────────────────────────────────────────────────────────────
 
-function CourseTab({ password }: { password: string }) {
-  const [productId, setProductId] = useState('course');
-  const [blocks, setBlocks] = useState<CourseBlock[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [editingId, setEditingId] = useState<string | 'new' | null>(null);
-  const [form, setForm] = useState(EMPTY_FORM);
-  const [saving, setSaving] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
+function LandingTab({ password, config }: { password: string; config: AppConfig | null }) {
+  const [form, setForm] = useState({
+    hero_title: config?.site.hero_title ?? 'Накриває?',
+    hero_subtitle: config?.site.hero_subtitle ?? 'Зараз перевіримо, що це.',
+    trust_text: config?.site.trust_text ?? '',
+  });
 
-  const fetchBlocks = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/admin/course?product_id=${encodeURIComponent(productId)}`, {
-        headers: { Authorization: makeAuthHeader(password) },
-      });
-      const data = await res.json() as { blocks: CourseBlock[] };
-      setBlocks(data.blocks ?? []);
-    } finally {
-      setLoading(false);
-    }
-  }, [password, productId]);
-
-  useEffect(() => { void fetchBlocks(); }, [fetchBlocks]);
-
-  function startEdit(block: CourseBlock) {
-    setEditingId(block.id);
+  useEffect(() => {
+    if (!config) return;
     setForm({
-      title: block.title,
-      description: block.description ?? '',
-      video_url: block.video_url ?? '',
-      text_content: block.text_content ?? '',
+      hero_title: config.site.hero_title,
+      hero_subtitle: config.site.hero_subtitle,
+      trust_text: config.site.trust_text,
     });
-    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-  }
+  }, [config]);
 
-  function startAdd() {
-    setEditingId('new');
-    setForm(EMPTY_FORM);
-    setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setForm(EMPTY_FORM);
-  }
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   async function handleSave() {
-    if (!form.title.trim()) return;
     setSaving(true);
     try {
-      if (editingId === 'new') {
-        await fetch('/api/admin/course', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
-          body: JSON.stringify({ product_id: productId, ...form }),
-        });
-      } else {
-        await fetch(`/api/admin/course?id=${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
-          body: JSON.stringify(form),
-        });
+      const res = await fetch('/api/admin/config', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
+        body: JSON.stringify({ table: 'site', id: 'site', updates: form }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
       }
-      setEditingId(null);
-      setForm(EMPTY_FORM);
-      await fetchBlocks();
     } finally {
       setSaving(false);
     }
   }
 
-  async function handleDelete(id: string) {
-    if (!window.confirm('Видалити цей блок?')) return;
-    await fetch(`/api/admin/course?id=${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: makeAuthHeader(password) },
-    });
-    await fetchBlocks();
-  }
+  const inputCls = 'w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white placeholder-white/25 text-sm focus:outline-none focus:border-[#f5a623]/50 transition-colors';
 
-  async function handleMove(block: CourseBlock, direction: 'up' | 'down') {
-    const index = blocks.findIndex((b) => b.id === block.id);
-    const swapIndex = direction === 'up' ? index - 1 : index + 1;
-    if (swapIndex < 0 || swapIndex >= blocks.length) return;
-    const swap = blocks[swapIndex];
-    await Promise.all([
-      fetch(`/api/admin/course?id=${block.id}`, {
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-5 max-w-2xl">
+      <h3 className="text-white font-semibold">Тексти лендингу</h3>
+
+      <div>
+        <label className="text-white/40 text-xs block mb-1">Заголовок Hero</label>
+        <input
+          type="text"
+          value={form.hero_title}
+          onChange={(e) => setForm((f) => ({ ...f, hero_title: e.target.value }))}
+          className={inputCls}
+        />
+      </div>
+
+      <div>
+        <label className="text-white/40 text-xs block mb-1">Підзаголовок Hero</label>
+        <input
+          type="text"
+          value={form.hero_subtitle}
+          onChange={(e) => setForm((f) => ({ ...f, hero_subtitle: e.target.value }))}
+          className={inputCls}
+        />
+      </div>
+
+      <div>
+        <label className="text-white/40 text-xs block mb-1">Текст Trust (відмова відповідальності)</label>
+        <textarea
+          value={form.trust_text}
+          onChange={(e) => setForm((f) => ({ ...f, trust_text: e.target.value }))}
+          rows={4}
+          className={`${inputCls} resize-none`}
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <button
+          onClick={() => void handleSave()}
+          disabled={saving}
+          className="px-5 py-2 rounded-xl bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black text-sm font-semibold transition-colors"
+        >
+          {saving ? 'Збереження...' : saved ? 'Збережено ✓' : 'Зберегти'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Results Tab ───────────────────────────────────────────────────────────────
+
+const RESULT_TYPE_IDS = Object.keys(RESULT_TYPE_LABELS);
+
+type ResultForm = AppConfig['results'][string];
+
+const EMPTY_RESULT_FORM: ResultForm = {
+  title: '',
+  preview_phrase_1: '',
+  preview_phrase_2: '',
+  full_description: '',
+  recommendation: '',
+};
+
+function ResultsTab({ password, config }: { password: string; config: AppConfig | null }) {
+  const [typeId, setTypeId] = useState(RESULT_TYPE_IDS[0]);
+  const [form, setForm] = useState<ResultForm>(EMPTY_RESULT_FORM);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!config) return;
+    setForm(config.results[typeId] ?? EMPTY_RESULT_FORM);
+  }, [config, typeId]);
+
+  async function handleSave() {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/admin/config', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
-        body: JSON.stringify({ order_index: swap.order_index }),
-      }),
-      fetch(`/api/admin/course?id=${swap.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: makeAuthHeader(password) },
-        body: JSON.stringify({ order_index: block.order_index }),
-      }),
-    ]);
-    await fetchBlocks();
+        body: JSON.stringify({ table: 'results', id: typeId, updates: form }),
+      });
+      if (res.ok) {
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      }
+    } finally {
+      setSaving(false);
+    }
   }
 
   const inputCls = 'w-full bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white placeholder-white/25 text-sm focus:outline-none focus:border-[#f5a623]/50 transition-colors';
 
   return (
-    <div className="flex flex-col gap-5">
-      {/* Product selector */}
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className="flex flex-col gap-5 max-w-2xl">
+      <div>
+        <label className="text-white/40 text-xs block mb-1">Тип результату</label>
         <select
-          value={productId}
-          onChange={(e) => { setProductId(e.target.value); setEditingId(null); }}
+          value={typeId}
+          onChange={(e) => setTypeId(e.target.value)}
           className="bg-white/5 border border-white/15 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#f5a623]/50 transition-colors"
         >
-          {getAllProducts().map((p) => (
-            <option key={p.id} value={p.id}>{p.title}</option>
+          {RESULT_TYPE_IDS.map((id) => (
+            <option key={id} value={id}>{RESULT_TYPE_LABELS[id]}</option>
           ))}
         </select>
-        <span className="text-white/30 text-sm">{blocks.length} блоків</span>
-        <button
-          onClick={startAdd}
-          className="ml-auto bg-[#f5a623]/10 hover:bg-[#f5a623]/20 border border-[#f5a623]/30 text-[#f5a623] text-sm font-medium px-4 py-2 rounded-xl transition-colors"
-        >
-          + Додати блок
-        </button>
       </div>
 
-      {/* Block list */}
-      {loading ? (
-        <div className="flex justify-center py-10">
-          <div className="w-5 h-5 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
+      <div className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-4">
+        <div>
+          <label className="text-white/40 text-xs block mb-1">Заголовок</label>
+          <input
+            type="text"
+            value={form.title}
+            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+            className={inputCls}
+          />
         </div>
-      ) : blocks.length === 0 && editingId !== 'new' ? (
-        <p className="text-white/30 text-sm text-center py-10">Блоків ще немає. Натисніть "+ Додати блок"</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {blocks.map((block, index) => (
-            <div key={block.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden">
-              {/* Block header */}
-              <div className="flex items-start gap-3 p-4">
-                <span className="shrink-0 w-6 h-6 rounded-full bg-[#f5a623]/15 text-[#f5a623] text-xs font-bold flex items-center justify-center mt-0.5">
-                  {index + 1}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-medium leading-snug">{block.title}</p>
-                  {block.video_url && (
-                    <p className="text-white/30 text-xs mt-0.5 truncate">📹 {block.video_url}</p>
-                  )}
-                  {block.text_content && (
-                    <p className="text-white/30 text-xs mt-0.5 truncate">📝 {block.text_content.slice(0, 60)}…</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button
-                    onClick={() => handleMove(block, 'up')}
-                    disabled={index === 0}
-                    className="p-1.5 rounded-lg text-white/30 hover:text-white/60 disabled:opacity-20 transition-colors"
-                    title="Вгору"
-                  >↑</button>
-                  <button
-                    onClick={() => handleMove(block, 'down')}
-                    disabled={index === blocks.length - 1}
-                    className="p-1.5 rounded-lg text-white/30 hover:text-white/60 disabled:opacity-20 transition-colors"
-                    title="Вниз"
-                  >↓</button>
-                  <button
-                    onClick={() => editingId === block.id ? cancelEdit() : startEdit(block)}
-                    className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 hover:text-white text-xs transition-colors"
-                  >
-                    {editingId === block.id ? 'Скасувати' : 'Редагувати'}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(block.id)}
-                    className="px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs transition-colors"
-                  >
-                    Видалити
-                  </button>
-                </div>
-              </div>
-
-              {/* Inline edit form */}
-              {editingId === block.id && (
-                <div ref={formRef} className="border-t border-white/10 p-4 flex flex-col gap-3 bg-white/3">
-                  <BlockForm form={form} setForm={setForm} inputCls={inputCls} />
-                  <div className="flex gap-2 justify-end">
-                    <button onClick={cancelEdit} className="px-4 py-2 rounded-xl text-white/40 hover:text-white/70 text-sm transition-colors">
-                      Скасувати
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving || !form.title.trim()}
-                      className="px-4 py-2 rounded-xl bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black text-sm font-semibold transition-colors"
-                    >
-                      {saving ? 'Збереження...' : 'Зберегти'}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-
-          {/* Add new block form */}
-          {editingId === 'new' && (
-            <div ref={formRef} className="bg-white/5 border border-[#f5a623]/20 rounded-2xl p-4 flex flex-col gap-3">
-              <p className="text-[#f5a623] text-sm font-semibold">Новий блок</p>
-              <BlockForm form={form} setForm={setForm} inputCls={inputCls} />
-              <div className="flex gap-2 justify-end">
-                <button onClick={cancelEdit} className="px-4 py-2 rounded-xl text-white/40 hover:text-white/70 text-sm transition-colors">
-                  Скасувати
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !form.title.trim()}
-                  className="px-4 py-2 rounded-xl bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black text-sm font-semibold transition-colors"
-                >
-                  {saving ? 'Збереження...' : 'Додати'}
-                </button>
-              </div>
-            </div>
-          )}
+        <div>
+          <label className="text-white/40 text-xs block mb-1">Фраза попереднього перегляду 1</label>
+          <input
+            type="text"
+            value={form.preview_phrase_1}
+            onChange={(e) => setForm((f) => ({ ...f, preview_phrase_1: e.target.value }))}
+            className={inputCls}
+          />
         </div>
-      )}
+        <div>
+          <label className="text-white/40 text-xs block mb-1">Фраза попереднього перегляду 2</label>
+          <input
+            type="text"
+            value={form.preview_phrase_2}
+            onChange={(e) => setForm((f) => ({ ...f, preview_phrase_2: e.target.value }))}
+            className={inputCls}
+          />
+        </div>
+        <div>
+          <label className="text-white/40 text-xs block mb-1">Повний опис</label>
+          <textarea
+            value={form.full_description}
+            onChange={(e) => setForm((f) => ({ ...f, full_description: e.target.value }))}
+            rows={4}
+            className={`${inputCls} resize-none`}
+          />
+        </div>
+        <div>
+          <label className="text-white/40 text-xs block mb-1">Рекомендація</label>
+          <textarea
+            value={form.recommendation}
+            onChange={(e) => setForm((f) => ({ ...f, recommendation: e.target.value }))}
+            rows={3}
+            className={`${inputCls} resize-none`}
+          />
+        </div>
+
+        <div className="flex justify-end">
+          <button
+            onClick={() => void handleSave()}
+            disabled={saving}
+            className="px-5 py-2 rounded-xl bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black text-sm font-semibold transition-colors"
+          >
+            {saving ? 'Збереження...' : saved ? 'Збережено ✓' : 'Зберегти'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function BlockForm({
-  form,
-  setForm,
-  inputCls,
-}: {
-  form: typeof EMPTY_FORM;
-  setForm: React.Dispatch<React.SetStateAction<typeof EMPTY_FORM>>;
-  inputCls: string;
-}) {
-  return (
-    <>
-      <div>
-        <label className="text-white/40 text-xs block mb-1">Заголовок блоку *</label>
-        <input
-          type="text"
-          value={form.title}
-          onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-          placeholder="Наприклад: Чому тривога відчувається як небезпека"
-          className={inputCls}
-        />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs block mb-1">Опис (необов'язково)</label>
-        <textarea
-          value={form.description}
-          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          placeholder="Короткий опис блоку..."
-          rows={2}
-          className={`${inputCls} resize-none`}
-        />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs block mb-1">YouTube URL (необов'язково)</label>
-        <input
-          type="url"
-          value={form.video_url}
-          onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))}
-          placeholder="https://www.youtube.com/watch?v=..."
-          className={inputCls}
-        />
-      </div>
-      <div>
-        <label className="text-white/40 text-xs block mb-1">Текстовий контент (необов'язково)</label>
-        <textarea
-          value={form.text_content}
-          onChange={(e) => setForm((f) => ({ ...f, text_content: e.target.value }))}
-          placeholder="Текст, який побачить користувач після відео..."
-          rows={4}
-          className={`${inputCls} resize-none`}
-        />
-      </div>
-    </>
-  );
-}
-
 // ── Main ──────────────────────────────────────────────────────────────────────
+
+type Tab = 'stats' | 'orders' | 'products' | 'landing' | 'results';
 
 export function AdminPage() {
   const [password, setPassword] = useState<string | null>(
     () => sessionStorage.getItem('admin_pw')
   );
   const [stats, setStats] = useState<Stats | null>(null);
-  const [activeTab, setActiveTab] = useState<'stats' | 'orders' | 'course'>('stats');
+  const [activeTab, setActiveTab] = useState<Tab>('stats');
   const [statsError, setStatsError] = useState(false);
+  const [config, setConfig] = useState<AppConfig | null>(null);
 
-  // Validate stored password and load stats
   useEffect(() => {
     if (!password) return;
 
@@ -672,6 +747,11 @@ export function AdminPage() {
       })
       .then((data) => { if (data) setStats(data); })
       .catch(() => setStatsError(true));
+
+    fetch('/api/admin/config', { headers: { Authorization: makeAuthHeader(password) } })
+      .then((r) => r.json())
+      .then((data: AppConfig) => setConfig(data))
+      .catch(() => { /* ignore */ });
   }, [password]);
 
   function handleLogin(pw: string) {
@@ -682,15 +762,23 @@ export function AdminPage() {
     sessionStorage.removeItem('admin_pw');
     setPassword(null);
     setStats(null);
+    setConfig(null);
   }
 
   if (!password) {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
+  const TABS: [Tab, string][] = [
+    ['stats', 'Огляд'],
+    ['orders', 'Замовлення'],
+    ['products', 'Продукти'],
+    ['landing', 'Лендинг'],
+    ['results', 'Результати'],
+  ];
+
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white">
-      {/* Top bar */}
       <div className="border-b border-white/10 bg-[#0d0d1a] sticky top-0 z-10">
         <div className="max-w-5xl mx-auto px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -698,9 +786,8 @@ export function AdminPage() {
             <span className="text-white/20 text-sm">/ адмін</span>
           </div>
           <div className="flex items-center gap-4">
-            {/* Tabs */}
-            <nav className="flex gap-1">
-              {([['stats', 'Огляд'], ['orders', 'Замовлення'], ['course', 'Курс']] as const).map(([tab, label]) => (
+            <nav className="flex gap-1 flex-wrap">
+              {TABS.map(([tab, label]) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -724,7 +811,6 @@ export function AdminPage() {
         </div>
       </div>
 
-      {/* Content */}
       <div className="max-w-5xl mx-auto px-6 py-8">
         {activeTab === 'stats' && (
           statsError ? (
@@ -737,12 +823,10 @@ export function AdminPage() {
             <StatsTab stats={stats} />
           )
         )}
-        {activeTab === 'orders' && (
-          <OrdersTab password={password} />
-        )}
-        {activeTab === 'course' && (
-          <CourseTab password={password} />
-        )}
+        {activeTab === 'orders' && <OrdersTab password={password} />}
+        {activeTab === 'products' && <ProductsTab password={password} config={config} />}
+        {activeTab === 'landing' && <LandingTab password={password} config={config} />}
+        {activeTab === 'results' && <ResultsTab password={password} config={config} />}
       </div>
     </div>
   );

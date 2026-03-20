@@ -8,7 +8,9 @@ import { ProductCard } from './ProductCard';
 import { redirectToLiqPay, generateOrderId } from '../../utils/liqpay';
 import { trackEvent } from '../../utils/analytics';
 import { saveUserEmail } from '../../utils/user';
+import { useConfig } from '../../context/ConfigContext';
 import type { AnxietyType } from '../../types/quiz';
+import type { Product } from '../../types/product';
 
 function getResultPath(_productId: string): string {
   return '/my-materials';
@@ -25,6 +27,7 @@ const TYPE_TO_PRODUCT: Record<AnxietyType, string> = {
 export function CheckoutPage() {
   const navigate = useNavigate();
   const { result, selectedProduct, setSelectedProduct, addPurchasedProduct } = useQuizStore();
+  const config = useConfig();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -35,13 +38,27 @@ export function CheckoutPage() {
     if (!result) navigate('/', { replace: true });
   }, [result, navigate]);
 
+  const enabledProducts = PRODUCTS.filter(
+    (p) => config?.products[p.id]?.is_enabled !== false
+  );
+
   useEffect(() => {
     if (result && !selectedProduct) {
       const recommendedId = TYPE_TO_PRODUCT[result.type];
-      const recommended = getAllProducts().find((p) => p.id === recommendedId);
-      if (recommended) setSelectedProduct(recommended);
+      const allProds = getAllProducts();
+      const recommended = allProds.find((p) => p.id === recommendedId);
+      if (recommended && config?.products[recommended.id]?.is_enabled !== false) {
+        setSelectedProduct(recommended);
+      } else if (enabledProducts.length > 0) {
+        setSelectedProduct(enabledProducts[0]);
+      }
     }
-  }, [result, selectedProduct, setSelectedProduct]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result, selectedProduct, setSelectedProduct, config]);
+
+  function getEffectivePrice(product: Product): number | null {
+    return config?.products[product.id]?.price ?? product.price;
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -50,18 +67,19 @@ export function CheckoutPage() {
     setIsSubmitting(true);
     setError(null);
     saveUserEmail(email);
-    trackEvent(`purchase_${selectedProduct.id}`, { price: selectedProduct.price });
+    const price = getEffectivePrice(selectedProduct);
+    trackEvent(`purchase_${selectedProduct.id}`, { price });
 
     addPurchasedProduct(selectedProduct.id);
 
-    if (selectedProduct.price === null) {
+    if (price === null) {
       navigate(getResultPath(selectedProduct.id));
       return;
     }
 
     try {
       await redirectToLiqPay({
-        amount: selectedProduct.price,
+        amount: price,
         description: `${selectedProduct.title} — тривога.net`,
         orderId: generateOrderId(selectedProduct.id, email),
         customerName: name,
@@ -77,7 +95,8 @@ export function CheckoutPage() {
     }
   }
 
-  const isPriceless = selectedProduct?.price === null;
+  const effectivePrice = selectedProduct ? getEffectivePrice(selectedProduct) : null;
+  const isPriceless = effectivePrice === null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -91,14 +110,21 @@ export function CheckoutPage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {PRODUCTS.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                isSelected={selectedProduct?.id === product.id}
-                onSelect={() => setSelectedProduct(product)}
-              />
-            ))}
+            {enabledProducts.map((product) => {
+              const displayProduct = {
+                ...product,
+                price: getEffectivePrice(product),
+                priceLabel: `${getEffectivePrice(product)} грн`,
+              };
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={displayProduct}
+                  isSelected={selectedProduct?.id === product.id}
+                  onSelect={() => setSelectedProduct(product)}
+                />
+              );
+            })}
           </div>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -156,7 +182,7 @@ export function CheckoutPage() {
                 ? 'Переходимо до оплати...'
                 : isPriceless
                 ? 'Залишити заявку'
-                : `Оплатити через LiqPay ${selectedProduct?.price ? `${selectedProduct.price} грн` : ''}`}
+                : `Оплатити через LiqPay ${effectivePrice ? `${effectivePrice} грн` : ''}`}
             </Button>
 
             <p className="text-center text-white/30 text-xs">

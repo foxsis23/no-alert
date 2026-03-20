@@ -4,19 +4,22 @@ import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { useMyPurchases } from '../../hooks/useMyPurchases';
+import { useConfig } from '../../context/ConfigContext';
 
 const TOAST_KEY = 'toast_shown_basic';
 
 export function CourseBasicPage() {
   const navigate = useNavigate();
   const { productIds, ready } = useMyPurchases();
+  const config = useConfig();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   const hasAccess = productIds.includes('basic');
-  const audioUrl = '/basic.mp3';
+  const audioUrl = config?.products.basic?.audio_url ?? '/basic.mp3';
+  const textContent = config?.products.basic?.text_content ?? null;
 
   useEffect(() => {
     if (ready && !hasAccess) navigate('/checkout', { replace: true });
@@ -125,18 +128,20 @@ export function CourseBasicPage() {
             </div>
           </section>
 
-          <section className="flex flex-col gap-3">
-            <h2 className="text-xl font-bold text-white">Матеріали</h2>
-            <div className="bg-white/5 border border-white/10 rounded-xl p-8">
-              <p className="text-white/30">Текстові матеріали будуть тут</p>
-            </div>
-          </section>
+          {textContent && (
+            <section className="flex flex-col gap-3">
+              <h2 className="text-xl font-bold text-white">Матеріали</h2>
+              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{textContent}</p>
+              </div>
+            </section>
+          )}
         </div>
       </main>
 
       <audio
         ref={audioRef}
-        src={audioUrl ?? ''}
+        src={audioUrl}
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
