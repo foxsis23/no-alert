@@ -1,28 +1,17 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PRODUCTS, getAllProducts } from '../../../data/products';
 import { useQuizStore } from '../../../store/quizStore';
-import { useConfig } from '../../../context/ConfigContext';
+import { useProducts } from '../../../lib/queries';
+import { toDisplayProduct } from '../../../types/product';
 
 export function Pricing() {
   const navigate = useNavigate();
   const { purchasedProductIds } = useQuizStore();
-  const config = useConfig();
-  const allProducts = getAllProducts();
+  const { data: apiProducts } = useProducts();
 
-  function isPurchased(productId: string) {
-    return purchasedProductIds.includes(productId);
-  }
-
-  function getDestination(productId: string) {
-    if (isPurchased(productId)) {
-      const product = allProducts.find((p) => p.id === productId);
-      return product?.hasSupport ? '/support' : `/course/${productId}`;
-    }
-    return '/checkout';
-  }
-
-  const visibleProducts = PRODUCTS.filter(
-    (p) => config?.products[p.id]?.is_enabled !== false
+  const products = useMemo(
+    () => (apiProducts ?? []).map((p, i) => toDisplayProduct(p, i)),
+    [apiProducts],
   );
 
   return (
@@ -30,21 +19,19 @@ export function Pricing() {
       <div className="max-w-3xl mx-auto">
         <h2 className="text-3xl font-bold text-white text-center mb-10">Тарифи</h2>
         <div className="flex flex-wrap justify-center gap-4">
-          {visibleProducts.map((product) => {
-            const purchased = isPurchased(product.id);
-            const configPrice = config?.products[product.id]?.price;
-            const displayPrice = configPrice != null ? configPrice : product.price;
+          {products.map((product) => {
+            const purchased = purchasedProductIds.includes(product.id);
             return (
               <button
                 key={product.id}
-                onClick={() => navigate(getDestination(product.id))}
+                onClick={() => navigate(purchased ? `/course/${product.id}` : '/checkout')}
                 className={`relative rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02] cursor-pointer w-full sm:w-52 ${
                   product.isHighlighted ? 'ring-2 ring-[#e53e3e]' : ''
                 } ${purchased ? 'ring-2 ring-[#f5a623]' : ''}`}
               >
                 <img
                   src={product.imageSrc}
-                  alt='pricing'
+                  alt="pricing"
                   className="w-full h-36 object-cover object-center"
                   style={{ backgroundColor: product.imagePlaceholder }}
                 />
@@ -55,7 +42,7 @@ export function Pricing() {
                 >
                   <p className="font-bold text-white text-base">{product.title}</p>
                   <p className={`text-sm mt-1 ${product.isHighlighted ? 'text-white/90' : 'text-[#f5a623]'}`}>
-                    {displayPrice} грн
+                    {product.priceLabel}
                   </p>
                 </div>
               </button>

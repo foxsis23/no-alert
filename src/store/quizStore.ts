@@ -1,7 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { AnxietyResult } from '../types/quiz';
-import type { Product } from '../types/product';
 import { QUIZ_QUESTIONS } from '../data/questions';
 import { computeAnxietyResult } from '../data/anxietyTypes';
 
@@ -9,7 +8,7 @@ interface QuizState {
   answers: number[];
   currentQuestion: number;
   result: AnxietyResult | null;
-  selectedProduct: Product | null;
+  selectedProductId: string | null;
   purchasedProductIds: string[];
 }
 
@@ -18,7 +17,7 @@ interface QuizActions {
   nextQuestion: () => void;
   prevQuestion: () => void;
   computeResult: () => void;
-  setSelectedProduct: (product: Product) => void;
+  setSelectedProductId: (id: string) => void;
   addPurchasedProduct: (id: string) => void;
   reset: () => void;
 }
@@ -27,7 +26,7 @@ const initialState: QuizState = {
   answers: new Array(QUIZ_QUESTIONS.length).fill(-1),
   currentQuestion: 0,
   result: null,
-  selectedProduct: null,
+  selectedProductId: null,
   purchasedProductIds: [],
 };
 
@@ -58,7 +57,7 @@ export const useQuizStore = create<QuizState & QuizActions>()(
         set({ result: computeAnxietyResult(answers) });
       },
 
-      setSelectedProduct: (product) => set({ selectedProduct: product }),
+      setSelectedProductId: (id) => set({ selectedProductId: id }),
 
       addPurchasedProduct: (id) =>
         set((state) => ({
@@ -74,7 +73,7 @@ export const useQuizStore = create<QuizState & QuizActions>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         result: state.result,
-        selectedProduct: state.selectedProduct,
+        selectedProductId: state.selectedProductId,
         purchasedProductIds: state.purchasedProductIds,
       }),
     },

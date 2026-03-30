@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
-import { ConfigProvider } from './context/ConfigContext';
 import { LandingPage } from './pages/Landing/LandingPage';
 import { QuizPage } from './pages/Quiz/QuizPage';
 import { ResultsPage } from './pages/Results/ResultsPage';
@@ -19,9 +19,18 @@ import { AccessPage } from './pages/Access/AccessPage';
 import { MyMaterialsPage } from './pages/MyMaterials/MyMaterialsPage';
 import { AdminPage } from './pages/Admin/AdminPage';
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 export default function App() {
   return (
-    <ConfigProvider>
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Toaster position="top-right" theme="dark" richColors />
         <Routes>
@@ -45,6 +54,6 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </ConfigProvider>
+    </QueryClientProvider>
   );
 }

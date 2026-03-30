@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
-import { useMyPurchases } from '../../hooks/useMyPurchases';
-import { useConfig } from '../../context/ConfigContext';
+import { useQuizStore } from '../../store/quizStore';
+import { useProduct } from '../../lib/queries';
 
 function getYouTubeEmbedUrl(url: string): string | null {
   const watchMatch = url.match(/[?&]v=([^&]+)/);
@@ -36,29 +35,25 @@ function YouTubeEmbed({ url }: { url: string }) {
 export function CoursePage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
-  const { productIds, ready } = useMyPurchases();
-  const config = useConfig();
+  const { purchasedProductIds } = useQuizStore();
+  const { data: product, isLoading } = useProduct(productId ?? '');
 
-  const product = getAllProducts().find((p) => p.id === productId);
-  const hasAccess = productId ? productIds.includes(productId) : false;
-
-  const videoUrl = productId ? (config?.products[productId]?.video_url ?? null) : null;
-  const textContent = productId ? (config?.products[productId]?.text_content ?? null) : null;
+  const hasAccess = productId ? purchasedProductIds.includes(productId) : false;
 
   useEffect(() => {
-    if (ready && !hasAccess) navigate('/checkout', { replace: true });
-  }, [ready, hasAccess, navigate]);
+    if (!isLoading && !hasAccess) navigate('/checkout', { replace: true });
+  }, [isLoading, hasAccess, navigate]);
 
   useEffect(() => {
-    if (!ready || !hasAccess || !productId) return;
+    if (!hasAccess || !productId) return;
     const key = `toast_shown_${productId}`;
     if (!sessionStorage.getItem(key)) {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(key, '1');
     }
-  }, [ready, hasAccess, productId]);
+  }, [hasAccess, productId]);
 
-  if (!ready || !hasAccess || !product) return null;
+  if (isLoading || !hasAccess || !product) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -74,17 +69,11 @@ export function CoursePage() {
             <p className="text-white/50 mt-2">{product.description}</p>
           </div>
 
-          {videoUrl ? (
-            <YouTubeEmbed url={videoUrl} />
-          ) : !textContent ? (
+          {product.videoUrl ? (
+            <YouTubeEmbed url={product.videoUrl} />
+          ) : (
             <div className="bg-white/5 border border-white/10 rounded-2xl p-10 text-center">
               <p className="text-white/30">Матеріали з'являться незабаром.</p>
-            </div>
-          ) : null}
-
-          {textContent && (
-            <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-              <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{textContent}</p>
             </div>
           )}
         </div>

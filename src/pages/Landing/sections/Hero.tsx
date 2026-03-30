@@ -2,14 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
 import { trackEvent } from '../../../utils/analytics';
-import { useConfig } from '../../../context/ConfigContext';
 
 export function Hero() {
   const navigate = useNavigate();
-  const config = useConfig();
-
-  const title = config?.site.hero_title ?? 'Накриває?';
-  const subtitle = config?.site.hero_subtitle ?? 'Зараз перевіримо, що це.';
 
   useEffect(() => {
     trackEvent('view_landing');
@@ -28,10 +23,10 @@ export function Hero() {
 
       <div className="relative z-10 flex flex-col items-center gap-6 max-w-lg">
         <h1 className="text-6xl md:text-7xl font-black text-white leading-tight">
-          {title}
+          Накриває?
         </h1>
         <p className="text-xl text-white/70">
-          {subtitle}
+          Зараз перевіримо, що це.
         </p>
         <Button
           variant="primary"

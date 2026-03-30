@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { getAllProducts } from '../../data/products';
-import { useMyPurchases } from '../../hooks/useMyPurchases';
+import { useQuizStore } from '../../store/quizStore';
 
 const TOAST_KEY = 'toast_shown_panic_wave';
 
@@ -14,11 +13,8 @@ function formatTime(seconds: number): string {
 
 export function PanicAudioPage() {
   const navigate = useNavigate();
-  const { productIds, ready } = useMyPurchases();
-  const allProducts = getAllProducts();
-  const hasSupportAccess = productIds.some(
-    (id) => allProducts.find((p) => p.id === id)?.hasSupport,
-  );
+  const { purchasedProductIds } = useQuizStore();
+  const hasAccess = purchasedProductIds.length > 0;
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const audioUrl = '/panic-wave.mp3';
@@ -28,15 +24,13 @@ export function PanicAudioPage() {
   const [duration, setDuration] = useState(0);
 
   useEffect(() => {
-    if (!ready) return;
-    if (!hasSupportAccess) { navigate('/checkout', { replace: true }); return; }
+    if (!hasAccess) { navigate('/checkout', { replace: true }); return; }
 
     if (!sessionStorage.getItem(TOAST_KEY)) {
       toast('Натисни play — і просто слухай. Будь поруч із собою.', { duration: 5000 });
       sessionStorage.setItem(TOAST_KEY, '1');
     }
-
-  }, [ready, hasSupportAccess, navigate]);
+  }, [hasAccess, navigate]);
 
   function togglePlay() {
     const audio = audioRef.current;
@@ -59,7 +53,7 @@ export function PanicAudioPage() {
     setCurrentTime(value);
   }
 
-  if (!ready || !hasSupportAccess) return null;
+  if (!hasAccess) return null;
 
   const progress = duration > 0 ? (currentTime / duration) * 100 : 0;
 
@@ -86,10 +80,6 @@ export function PanicAudioPage() {
               Не вдалось завантажити аудіо.<br />
               Напишіть нам: <a href="mailto:info@tryvoga.net" className="text-[#f5a623]">info@tryvoga.net</a>
             </p>
-          ) : !audioUrl ? (
-            <div className="w-20 h-20 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
-            </div>
           ) : (
             <button
               onClick={togglePlay}
@@ -117,8 +107,7 @@ export function PanicAudioPage() {
               step={0.1}
               value={currentTime}
               onChange={handleSeek}
-              disabled={!audioUrl}
-              className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-[#f5a623] disabled:opacity-30"
+              className="w-full h-1.5 appearance-none rounded-full cursor-pointer accent-[#f5a623]"
               style={{
                 background: `linear-gradient(to right, #f5a623 ${progress}%, rgba(255,255,255,0.1) ${progress}%)`,
               }}
@@ -135,17 +124,15 @@ export function PanicAudioPage() {
         </p>
       </div>
 
-      {audioUrl && (
-        <audio
-          ref={audioRef}
-          src={audioUrl}
-          onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
-          onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
-          onPlay={() => setIsPlaying(true)}
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-        />
-      )}
+      <audio
+        ref={audioRef}
+        src={audioUrl}
+        onTimeUpdate={() => audioRef.current && setCurrentTime(audioRef.current.currentTime)}
+        onLoadedMetadata={() => audioRef.current && setDuration(audioRef.current.duration)}
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+        onEnded={() => setIsPlaying(false)}
+      />
     </div>
   );
 }

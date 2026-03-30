@@ -1,44 +1,41 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { UPSELL_MAP, getAllProducts } from '../../data/products';
-import { useConfig } from '../../context/ConfigContext';
-
-function getContentPath(productId: string): string {
-  if (productId === 'basic' || productId === 'support_7_days') return '/support';
-  return `/course/${productId}`;
-}
+import { useProducts } from '../../lib/queries';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { Footer } from '../../components/layout/Footer';
 import { trackEvent } from '../../utils/analytics';
-import type { Product } from '../../types/product';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { result, selectedProduct, setSelectedProduct, addPurchasedProduct, reset } = useQuizStore();
-  const config = useConfig();
+  const { result, selectedProductId, setSelectedProductId, addPurchasedProduct, reset } =
+    useQuizStore();
+  const { data: apiProducts } = useProducts();
+
+  const selectedProduct = useMemo(
+    () => apiProducts?.find((p) => p.id === selectedProductId) ?? null,
+    [apiProducts, selectedProductId],
+  );
 
   useEffect(() => {
     if (!result) navigate('/', { replace: true });
     else {
-      trackEvent('open_delivery', { product_id: selectedProduct?.id });
-      // Grant immediate local access so the user can open the content right away
-      if (selectedProduct) addPurchasedProduct(selectedProduct.id);
+      trackEvent('open_delivery', { product_id: selectedProductId });
+      if (selectedProductId) addPurchasedProduct(selectedProductId);
     }
-  }, [result, navigate, selectedProduct, addPurchasedProduct]);
+  }, [result, navigate, selectedProductId, addPurchasedProduct]);
 
   if (!result) return null;
 
-  const upsellIds = selectedProduct ? (UPSELL_MAP[selectedProduct.id] ?? []) : [];
-  const upsellProducts = upsellIds
-    .map((id) => getAllProducts().find((p) => p.id === id))
-    .filter((p): p is Product => p !== undefined && config?.products[p.id]?.is_enabled !== false)
+  // Show other products as suggestions (excluding purchased)
+  const suggestions = (apiProducts ?? [])
+    .filter((p) => p.id !== selectedProductId)
     .slice(0, 2);
 
-  function handleUpsell(product: Product) {
-    trackEvent(`click_upsell_${product.id}`, { product_id: product.id });
-    setSelectedProduct(product);
+  function handleUpsell(productId: string) {
+    trackEvent(`click_upsell_${productId}`, { product_id: productId });
+    setSelectedProductId(productId);
     navigate('/checkout');
   }
 
@@ -79,19 +76,19 @@ export function ThankYouPage() {
               variant="primary"
               size="lg"
               fullWidth
-              onClick={() => navigate(getContentPath(selectedProduct.id))}
+              onClick={() => navigate(`/course/${selectedProduct.id}`)}
             >
               Відкрити {'\u00AB'}{selectedProduct.title}{'\u00BB'} {'\u2192'}
             </Button>
           )}
 
-          {/* Upsells */}
-          {upsellProducts.length > 0 && (
+          {/* Suggestions */}
+          {suggestions.length > 0 && (
             <div className="flex flex-col gap-3 text-left">
               <p className="text-white/40 text-xs uppercase tracking-wider text-center">
                 Може стати в нагоді
               </p>
-              {upsellProducts.map((product) => (
+              {suggestions.map((product) => (
                 <div
                   key={product.id}
                   className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-center gap-4"
@@ -101,10 +98,10 @@ export function ThankYouPage() {
                     <p className="text-white/50 text-sm mt-0.5">{product.description}</p>
                   </div>
                   <button
-                    onClick={() => handleUpsell(product)}
+                    onClick={() => handleUpsell(product.id)}
                     className="shrink-0 bg-[#f5a623]/10 hover:bg-[#f5a623]/20 border border-[#f5a623]/30 text-[#f5a623] text-sm font-semibold px-3 py-2 rounded-lg transition-colors"
                   >
-                    {config?.products[product.id]?.price ?? product.price} грн
+                    {parseFloat(product.price)} грн
                   </button>
                 </div>
               ))}

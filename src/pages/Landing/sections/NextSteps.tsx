@@ -1,40 +1,18 @@
-import { useConfig } from '../../../context/ConfigContext';
-import { getAllProducts } from '../../../data/products';
-
-const PRODUCT_IDS = ['upsell_panic_audio', 'upsell_stability_7days', 'support_7_days', 'course'];
-
-const STEP_META: Record<string, { icon: string; description: string }> = {
-  upsell_panic_audio: {
-    icon: '🎧',
-    description: '5-хвилинне аудіо, що зупиняє напад паніки. Слухайте у будь-який момент.',
-  },
-  upsell_stability_7days: {
-    icon: '📅',
-    description: 'Щоденний протокол відновлення нервової системи на тиждень.',
-  },
-  support_7_days: {
-    icon: '💬',
-    description: 'Персональний супровід і відповіді на ваші запитання протягом тижня.',
-  },
-  course: {
-    icon: '📚',
-    description: 'Авторський курс психіатра — від причин тривоги до стійких змін.',
-  },
-};
+import { useMemo } from 'react';
+import { useProducts } from '../../../lib/queries';
 
 export function NextSteps() {
-  const config = useConfig();
-  const allProducts = getAllProducts();
+  const { data: products } = useProducts();
 
-  const steps = PRODUCT_IDS
-    .filter((id) => config?.products[id]?.is_enabled !== false)
-    .map((id) => {
-      const product = allProducts.find((p) => p.id === id);
-      if (!product) return null;
-      const price = config?.products[id]?.price ?? product.price;
-      return { id, title: product.title, price, ...STEP_META[id] };
-    })
-    .filter(Boolean);
+  const steps = useMemo(() => {
+    if (!products) return [];
+    return products.map((p) => ({
+      id: p.id,
+      title: p.title,
+      price: parseFloat(p.price),
+      description: p.description,
+    }));
+  }, [products]);
 
   if (steps.length === 0) return null;
 
@@ -49,18 +27,17 @@ export function NextSteps() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {steps.map((step) => step && (
+          {steps.map((step) => (
             <div
               key={step.id}
               className="bg-white/5 border border-white/10 rounded-2xl p-6 flex flex-col gap-3"
             >
               <div className="flex items-start justify-between gap-3">
-                <span className="text-3xl">{step.icon}</span>
-                {step.price != null && (
-                  <span className="text-[#f5a623] font-bold text-sm shrink-0">{step.price} грн</span>
-                )}
+                <h3 className="text-white font-bold text-lg">{step.title}</h3>
+                <span className="text-[#f5a623] font-bold text-sm shrink-0">
+                  {step.price} грн
+                </span>
               </div>
-              <h3 className="text-white font-bold text-lg">{step.title}</h3>
               <p className="text-white/50 text-sm leading-relaxed">{step.description}</p>
             </div>
           ))}

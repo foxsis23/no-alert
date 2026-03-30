@@ -1,18 +1,16 @@
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/ui/Button';
-import { useConfig } from '../../../context/ConfigContext';
-import { PRODUCTS } from '../../../data/products';
+import { useProducts } from '../../../lib/queries';
 
 export function ResultExample() {
   const navigate = useNavigate();
-  const config = useConfig();
+  const { data: products } = useProducts();
 
-  const enabledProducts = PRODUCTS.filter((p) => config?.products[p.id]?.is_enabled !== false);
-  const minPrice = enabledProducts.reduce<number | null>((min, p) => {
-    const price = config?.products[p.id]?.price ?? p.price ?? null;
-    if (price === null) return min;
-    return min === null || price < min ? price : min;
-  }, null);
+  const minPrice = useMemo(() => {
+    if (!products?.length) return null;
+    return Math.min(...products.map((p) => parseFloat(p.price)));
+  }, [products]);
 
   return (
     <section className="py-20 px-6">

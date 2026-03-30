@@ -3,35 +3,33 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
-import { useMyPurchases } from '../../hooks/useMyPurchases';
-import { useConfig } from '../../context/ConfigContext';
+import { useQuizStore } from '../../store/quizStore';
 
 const TOAST_KEY = 'toast_shown_basic';
 
 export function CourseBasicPage() {
   const navigate = useNavigate();
-  const { productIds, ready } = useMyPurchases();
-  const config = useConfig();
+  const { purchasedProductIds } = useQuizStore();
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  const hasAccess = productIds.includes('basic');
-  const audioUrl = config?.products.basic?.audio_url ?? '/basic.mp3';
-  const textContent = config?.products.basic?.text_content ?? null;
+  // CourseBasicPage is hardcoded for the "basic" course — check purchase by looking
+  // for any purchased product (the specific ID depends on the API)
+  const hasAccess = purchasedProductIds.length > 0;
 
   useEffect(() => {
-    if (ready && !hasAccess) navigate('/checkout', { replace: true });
-  }, [ready, hasAccess, navigate]);
+    if (!hasAccess) navigate('/checkout', { replace: true });
+  }, [hasAccess, navigate]);
 
   useEffect(() => {
-    if (!ready || !hasAccess) return;
+    if (!hasAccess) return;
     if (!sessionStorage.getItem(TOAST_KEY)) {
       toast.success('Ви отримали доступ до курсу!');
       sessionStorage.setItem(TOAST_KEY, '1');
     }
-  }, [ready, hasAccess]);
+  }, [hasAccess]);
 
   function togglePlay() {
     const audio = audioRef.current;
@@ -69,7 +67,7 @@ export function CourseBasicPage() {
     return `${m}:${s.toString().padStart(2, '0')}`;
   }
 
-  if (!ready || !hasAccess) return null;
+  if (!hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -127,21 +125,12 @@ export function CourseBasicPage() {
               />
             </div>
           </section>
-
-          {textContent && (
-            <section className="flex flex-col gap-3">
-              <h2 className="text-xl font-bold text-white">Матеріали</h2>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-6">
-                <p className="text-white/80 text-sm leading-relaxed whitespace-pre-wrap">{textContent}</p>
-              </div>
-            </section>
-          )}
         </div>
       </main>
 
       <audio
         ref={audioRef}
-        src={audioUrl}
+        src="/basic.mp3"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}

@@ -1,12 +1,10 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
+import { useProducts } from '../../lib/queries';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { trackEvent } from '../../utils/analytics';
-import { useConfig } from '../../context/ConfigContext';
-import { useMyPurchases } from '../../hooks/useMyPurchases';
-import { PRODUCTS } from '../../data/products';
 import type { AnxietyType } from '../../types/quiz';
 
 const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
@@ -34,35 +32,25 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 
 export function ResultsPage() {
   const navigate = useNavigate();
-  const { result, reset } = useQuizStore();
-  const { productIds, ready: purchasesReady } = useMyPurchases();
-  const config = useConfig();
+  const { result, purchasedProductIds, reset } = useQuizStore();
+  const { data: apiProducts } = useProducts();
 
   useEffect(() => {
     if (!result) navigate('/test', { replace: true });
     else trackEvent('view_result', { type: result.type });
   }, [result, navigate]);
 
+  const minPrice = useMemo(() => {
+    if (!apiProducts?.length) return null;
+    return Math.min(...apiProducts.map((p) => parseFloat(p.price)));
+  }, [apiProducts]);
+
   if (!result) return null;
 
   const colors = TYPE_COLORS[result.type];
-  const cfg = config?.results[result.type];
-  const title = cfg?.title ?? result.title;
-  const phrases = [
-    cfg?.preview_phrase_1 ?? result.previewPhrases[0],
-    cfg?.preview_phrase_2 ?? result.previewPhrases[1],
-  ].filter(Boolean);
-
-  // Check if user already purchased any product (localStorage + Supabase via email)
-  const hasPurchased = purchasesReady && PRODUCTS.some((p) => productIds.includes(p.id));
-
-  // Cheapest enabled product price for CTA
-  const enabledProducts = PRODUCTS.filter((p) => config?.products[p.id]?.is_enabled !== false);
-  const minPrice = enabledProducts.reduce<number | null>((min, p) => {
-    const price = config?.products[p.id]?.price ?? p.price ?? null;
-    if (price === null) return min;
-    return min === null || price < min ? price : min;
-  }, null);
+  const title = result.title;
+  const phrases = result.previewPhrases.slice(0, 2);
+  const hasPurchased = purchasedProductIds.length > 0;
 
   function handleRestart() {
     reset();
@@ -104,12 +92,12 @@ export function ResultsPage() {
             /* Unlocked: show full content */
             <div className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
               <p className="text-white/80 text-base leading-relaxed">
-                {cfg?.full_description ?? result.description}
+                {result.description}
               </p>
               <div className="bg-white/5 border border-white/10 rounded-xl p-5">
                 <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
                 <p className="text-white/90 text-base">
-                  {cfg?.recommendation ?? result.recommendation}
+                  {result.recommendation}
                 </p>
               </div>
               <Button

@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllProducts } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { trackEvent } from '../../utils/analytics';
-import { useMyPurchases } from '../../hooks/useMyPurchases';
+import { useQuizStore } from '../../store/quizStore';
 
 const SCENARIOS = [
   {
@@ -28,19 +27,15 @@ const SCENARIOS = [
 
 export function SupportPage() {
   const navigate = useNavigate();
-  const { productIds, ready } = useMyPurchases();
-  const allProducts = getAllProducts();
-  const hasSupportAccess = productIds.some(
-    (id) => allProducts.find((p) => p.id === id)?.hasSupport,
-  );
+  const { purchasedProductIds } = useQuizStore();
+  const hasAccess = purchasedProductIds.length > 0;
 
   useEffect(() => {
-    if (!ready) return;
-    if (!hasSupportAccess) navigate('/checkout', { replace: true });
+    if (!hasAccess) navigate('/checkout', { replace: true });
     else trackEvent('enter_support');
-  }, [ready, hasSupportAccess, navigate]);
+  }, [hasAccess, navigate]);
 
-  if (!ready || !hasSupportAccess) return null;
+  if (!hasAccess) return null;
 
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
@@ -68,7 +63,9 @@ export function SupportPage() {
                     </p>
                     <p className="text-white/50 text-sm mt-1">{scenario.description}</p>
                   </div>
-                  <span className="text-white/30 group-hover:text-white/60 transition-colors text-xl">{'\u2192'}</span>
+                  <span className="text-white/30 group-hover:text-white/60 transition-colors text-xl">
+                    {'\u2192'}
+                  </span>
                 </div>
               </button>
             ))}

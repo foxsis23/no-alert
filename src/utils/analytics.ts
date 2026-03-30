@@ -1,12 +1,11 @@
+import { trackAnalyticsEvent } from '../lib/api';
+
 declare global {
   interface Window {
     gtag?: (...args: unknown[]) => void;
     dataLayer?: unknown[];
   }
 }
-
-// Stable session ID for the current browser session
-const SESSION_ID = Math.random().toString(36).slice(2);
 
 export function initGA4(measurementId: string) {
   if (!measurementId || typeof window === 'undefined') return;
@@ -31,10 +30,6 @@ export function trackEvent(eventName: string, params?: Record<string, unknown>) 
     window.gtag('event', eventName, params);
   }
 
-  // Server-side (fire and forget)
-  fetch('/api/analytics', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ event: eventName, params, sessionId: SESSION_ID }),
-  }).catch(() => {/* silent */});
+  // Backend (fire and forget)
+  trackAnalyticsEvent({ event: eventName, metadata: params }).catch(() => {/* silent */});
 }
