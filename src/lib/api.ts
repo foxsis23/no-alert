@@ -10,7 +10,7 @@ import type {
 
 export async function fetchProducts(): Promise<ApiProduct[]> {
   const { data } = await apiClient.get<ApiProduct[]>('/products');
-  return data;
+  return Array.isArray(data) ? data : [];
 }
 
 export async function fetchProduct(id: string): Promise<ApiProduct> {
