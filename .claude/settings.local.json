@@ -11,7 +11,9 @@
       "Bash(npx tsc:*)",
       "Bash(npm run:*)",
       "Bash(node:*)",
-      "Bash(pdftoppm:*)"
+      "Bash(pdftoppm:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }
