@@ -39,8 +39,9 @@ export function MyMaterialsPage() {
     );
   }
 
-  // No valid session — show email gate
-  if (!hasValidSession) {
+  // Show email gate only when local purchases are empty and there's no valid session.
+  // If purchasedProductIds is non-empty the user just bought on this device — let them through.
+  if (purchasedProductIds.length === 0 && !hasValidSession) {
     return (
       <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
         <Header />
