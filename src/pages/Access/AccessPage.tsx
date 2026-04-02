@@ -1,13 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
+import { useSessionStore } from '../../store/sessionStore';
 import { saveUserEmail } from '../../utils/user';
 import { apiClient } from '../../lib/apiClient';
+import { createSession } from '../../lib/api';
+
+const SESSION_TIMEOUT_MS = 3000;
 
 export function AccessPage() {
   const { token } = useParams<{ token: string }>();
   const navigate = useNavigate();
   const { addPurchasedProduct } = useQuizStore();
+  const setSession = useSessionStore((s) => s.setSession);
   const [error, setError] = useState(false);
 
   useEffect(() => {
@@ -16,14 +21,33 @@ export function AccessPage() {
     apiClient.get<{ valid: boolean; productId?: string; email?: string }>(
       `/access?token=${token}`,
     )
-      .then(({ data }) => {
+      .then(async ({ data }) => {
         if (!data.valid || !data.productId) { setError(true); return; }
         if (data.email) saveUserEmail(data.email);
         addPurchasedProduct(data.productId);
+
+        // Bridge: create a session so the user can recover access from any device.
+        // Use merge mode — addPurchasedProduct already ran locally.
+        // If the request times out or fails, proceed to /my-materials anyway.
+        if (data.email) {
+          try {
+            const timeout = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('timeout')), SESSION_TIMEOUT_MS),
+            );
+            const { sessionToken, expiresAt, productIds } = await Promise.race([
+              createSession(data.email),
+              timeout,
+            ]);
+            setSession(sessionToken, expiresAt, productIds, 'merge');
+          } catch {
+            // Session creation failed or timed out — continue without session
+          }
+        }
+
         navigate('/my-materials', { replace: true });
       })
       .catch(() => setError(true));
-  }, [token, navigate, addPurchasedProduct]);
+  }, [token, navigate, addPurchasedProduct, setSession]);
 
   if (error) {
     return (

@@ -5,11 +5,19 @@ import { toDisplayProduct } from '../../types/product';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { useQuizStore } from '../../store/quizStore';
+import { useSessionStore, isSessionValid } from '../../store/sessionStore';
+import { EmailAccessForm } from './EmailAccessForm';
 
 export function MyMaterialsPage() {
   const navigate = useNavigate();
   const { purchasedProductIds } = useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
+  const sessionToken = useSessionStore((s) => s.sessionToken);
+  const sessionExpiresAt = useSessionStore((s) => s.sessionExpiresAt);
+  const clearSession = useSessionStore((s) => s.clearSession);
+  const setProductIds = useQuizStore((s) => s.setProductIds);
+
+  const hasValidSession = isSessionValid(sessionToken, sessionExpiresAt);
 
   const purchased = useMemo(() => {
     if (!apiProducts) return [];
@@ -18,10 +26,28 @@ export function MyMaterialsPage() {
       .map((p, i) => toDisplayProduct(p, i));
   }, [apiProducts, purchasedProductIds]);
 
+  function handleUseDifferentEmail() {
+    clearSession();
+    setProductIds([]);
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-[#0d0d1a] text-white flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // No valid session — show email gate
+  if (!hasValidSession) {
+    return (
+      <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
+        <Header />
+        <main className="flex-1 flex flex-col items-center justify-center px-6 py-24">
+          <EmailAccessForm />
+        </main>
+        <Footer />
       </div>
     );
   }
@@ -44,6 +70,12 @@ export function MyMaterialsPage() {
               <p className="text-white/40 text-center text-sm">
                 Покупок не знайдено.
               </p>
+              <button
+                onClick={handleUseDifferentEmail}
+                className="text-white/30 hover:text-white/50 text-sm transition-colors text-center"
+              >
+                Використати інший email
+              </button>
               <button
                 onClick={() => navigate('/')}
                 className="text-white/30 hover:text-white/50 text-sm transition-colors text-center"
@@ -85,6 +117,13 @@ export function MyMaterialsPage() {
                   </div>
                 ))}
               </div>
+
+              <button
+                onClick={handleUseDifferentEmail}
+                className="text-white/30 hover:text-white/50 text-sm transition-colors text-center"
+              >
+                Використати інший email
+              </button>
 
               <button
                 onClick={() => navigate('/')}

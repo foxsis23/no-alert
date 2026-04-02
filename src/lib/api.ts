@@ -6,6 +6,8 @@ import type {
   TrackEventRequest,
   OrderStatus,
   EventSummary,
+  CreateSessionRequest,
+  CreateSessionResponse,
 } from '../types/api';
 
 export async function fetchProducts(): Promise<ApiProduct[]> {
@@ -37,6 +39,22 @@ export async function fetchOrders(adminKey: string): Promise<OrderStatus[]> {
     headers: { 'x-admin-key': adminKey },
   });
   return data;
+}
+
+export async function createSession(
+  email: string,
+): Promise<CreateSessionResponse> {
+  const req: CreateSessionRequest = { email };
+  const { data } = await apiClient.post<{
+    session_token: string;
+    expires_at: string;
+    product_ids: string[];
+  }>('/auth/session', req);
+  return {
+    sessionToken: data.session_token,
+    expiresAt: data.expires_at,
+    productIds: data.product_ids,
+  };
 }
 
 export async function fetchAnalyticsSummary(

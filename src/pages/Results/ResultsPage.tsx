@@ -32,7 +32,7 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 
 export function ResultsPage() {
   const navigate = useNavigate();
-  const { result, purchasedProductIds, reset } = useQuizStore();
+  const { result, purchasedProductIds, resetQuiz } = useQuizStore();
   const { data: apiProducts } = useProducts();
 
   useEffect(() => {
@@ -53,7 +53,7 @@ export function ResultsPage() {
   const hasPurchased = purchasedProductIds.length > 0;
 
   function handleRestart() {
-    reset();
+    resetQuiz();
     navigate('/test');
   }
 
