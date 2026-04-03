@@ -32,7 +32,7 @@ const TYPE_COLORS: Record<AnxietyType, { badge: string; dot: string }> = {
 
 export function ResultsPage() {
   const navigate = useNavigate();
-  const { result, purchasedProductIds, resetQuiz } = useQuizStore();
+  const { result, resetQuiz } = useQuizStore();
   const { data: apiProducts } = useProducts();
 
   useEffect(() => {
@@ -50,7 +50,6 @@ export function ResultsPage() {
   const colors = TYPE_COLORS[result.type];
   const title = result.title;
   const phrases = result.previewPhrases.slice(0, 2);
-  const hasPurchased = purchasedProductIds.length > 0;
 
   function handleRestart() {
     resetQuiz();
@@ -88,62 +87,28 @@ export function ResultsPage() {
             ))}
           </div>
 
-          {hasPurchased ? (
-            /* Unlocked: show full content */
-            <div className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
-              <p className="text-white/80 text-base leading-relaxed">
-                {result.description}
+          {/* Full result info */}
+          <div className="flex flex-col gap-4 bg-white/5 border border-white/10 rounded-2xl p-5">
+            <p className="text-white/80 text-base leading-relaxed">
+              {result.description}
+            </p>
+            <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+              <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
+              <p className="text-white/90 text-base">
+                {result.recommendation}
               </p>
-              <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
-                <p className="text-white/90 text-base">
-                  {result.recommendation}
-                </p>
-              </div>
-              <Button
-                variant="primary"
-                size="lg"
-                fullWidth
-                onClick={() => navigate('/my-materials')}
-              >
-                Мої матеріали →
-              </Button>
             </div>
-          ) : (
-            /* Paywall */
-            <div className="relative rounded-2xl overflow-hidden border border-white/10">
-              <div
-                className="flex flex-col gap-4 p-5 pointer-events-none select-none"
-                style={{ filter: 'blur(6px)' }}
-                aria-hidden="true"
-              >
-                <p className="text-white/70 text-base leading-relaxed">
-                  Детальний опис твого типу тривоги та причини його появи. Що відбувається в нервовій
-                  системі і чому симптоми саме такі.
-                </p>
-                <div className="bg-white/5 border border-white/10 rounded-xl p-5">
-                  <p className="text-white/50 text-xs uppercase tracking-wider mb-2">Рекомендація</p>
-                  <p className="text-white/90 text-base">
-                    Персоналізований план дій на основі твого типу тривоги.
-                  </p>
-                </div>
-              </div>
+          </div>
 
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a] via-[#0d0d1a]/80 to-transparent flex flex-col items-center justify-end pb-6 px-5 gap-3">
-                <p className="text-white/60 text-sm text-center">
-                  Повний аналіз + персональний план дій
-                </p>
-                <Button
-                  variant="primary"
-                  size="lg"
-                  fullWidth
-                  onClick={() => { trackEvent('click_paywall_29'); navigate('/checkout'); }}
-                >
-                  {minPrice !== null ? `Розблокувати — від ${minPrice} грн` : 'Розблокувати'}
-                </Button>
-              </div>
-            </div>
-          )}
+          {/* Buy CTA */}
+          <Button
+            variant="primary"
+            size="lg"
+            fullWidth
+            onClick={() => { trackEvent('click_paywall', { type: result.type }); navigate('/checkout'); }}
+          >
+            {minPrice !== null ? `Купити курс — від ${minPrice} грн` : 'Купити курс'}
+          </Button>
 
           {/* Restart */}
           <Button variant="ghost" size="md" fullWidth onClick={handleRestart}>

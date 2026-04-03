@@ -9,7 +9,7 @@ import { trackEvent } from '../../utils/analytics';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { result, selectedProductId, setSelectedProductId, addPurchasedProduct, resetQuiz } =
+  const { result, selectedProductId, purchasedProductIds, setSelectedProductId, addPurchasedProduct, resetQuiz } =
     useQuizStore();
   const { data: apiProducts } = useProducts();
 
@@ -28,10 +28,19 @@ export function ThankYouPage() {
 
   if (!result) return null;
 
-  // Show other products as suggestions (excluding purchased)
-  const suggestions = (apiProducts ?? [])
-    .filter((p) => p.id !== selectedProductId)
-    .slice(0, 2);
+  // Upsell logic per TZ:
+  // noalert_1 (29 грн) → noalert_3 (7 днів підтримки)
+  // noalert_3 (7 днів) → noalert_2 (курс)
+  // noalert_2 (курс) → noalert_3 (підтримка)
+  const UPSELL_MAP: Record<string, string> = {
+    noalert_1: 'noalert_3',
+    noalert_3: 'noalert_2',
+    noalert_2: 'noalert_3',
+  };
+  const upsellId = selectedProductId ? UPSELL_MAP[selectedProductId] : null;
+  const suggestions = upsellId && !purchasedProductIds.includes(upsellId)
+    ? (apiProducts ?? []).filter((p) => p.id === upsellId)
+    : [];
 
   function handleUpsell(productId: string) {
     trackEvent(`click_upsell_${productId}`, { product_id: productId });
@@ -63,22 +72,21 @@ export function ThankYouPage() {
               : 'Ваш запит прийнято.'}
           </p>
 
-          <div className="bg-white/5 border border-white/10 rounded-xl p-5 text-left flex flex-col gap-2">
-            <p className="text-white/50 text-xs uppercase tracking-wider">Що далі</p>
-            <p className="text-white/80">
-              Перевірте свою пошту — там буде посилання для доступу до матеріалів.
-            </p>
-          </div>
-
           {/* Open purchased content immediately */}
           {selectedProduct && (
             <Button
               variant="primary"
               size="lg"
               fullWidth
-              onClick={() => navigate(`/course/${selectedProduct.id}`)}
+              onClick={() => {
+                if (selectedProduct.id === 'noalert_3') navigate('/support');
+                else if (selectedProduct.id === 'noalert_1') navigate('/course/basic');
+                else navigate(`/course/${selectedProduct.id}`);
+              }}
             >
-              Відкрити {'\u00AB'}{selectedProduct.title}{'\u00BB'} {'\u2192'}
+              {selectedProduct.id === 'noalert_3'
+                ? 'Перейти в підтримку →'
+                : `Відкрити \u00AB${selectedProduct.title}\u00BB \u2192`}
             </Button>
           )}
 

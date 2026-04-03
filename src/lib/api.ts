@@ -3,6 +3,7 @@ import type {
   ApiProduct,
   CreatePaymentRequest,
   CreatePaymentResponse,
+  UpdateProductRequest,
   TrackEventRequest,
   OrderStatus,
   EventSummary,
@@ -28,6 +29,23 @@ export async function createPayment(
     req,
   );
   return data;
+}
+
+export async function updateProduct(
+  id: string,
+  adminKey: string,
+  data: UpdateProductRequest,
+): Promise<ApiProduct> {
+  const { data: product } = await apiClient.patch<ApiProduct>(`/products/${id}`, data, {
+    headers: { 'x-admin-key': adminKey },
+  });
+  return product;
+}
+
+export async function deleteProduct(id: string, adminKey: string): Promise<void> {
+  await apiClient.delete(`/products/${id}`, {
+    headers: { 'x-admin-key': adminKey },
+  });
 }
 
 export async function trackAnalyticsEvent(req: TrackEventRequest): Promise<void> {

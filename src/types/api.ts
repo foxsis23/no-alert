@@ -69,6 +69,15 @@ export interface EventSummary {
   count: number;
 }
 
+export interface UpdateProductRequest {
+  title?: string;
+  description?: string;
+  price?: string;
+  videoUrl?: string;
+  isActive?: boolean;
+  order?: number;
+}
+
 export interface CreateSessionRequest {
   email: string;
 }

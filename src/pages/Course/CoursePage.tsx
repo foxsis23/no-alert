@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { useQuizStore } from '../../store/quizStore';
-import { useProduct } from '../../lib/queries';
+import { useProducts } from '../../lib/queries';
 
 function getYouTubeEmbedUrl(url: string): string | null {
   const watchMatch = url.match(/[?&]v=([^&]+)/);
@@ -36,13 +36,15 @@ export function CoursePage() {
   const { productId } = useParams<{ productId: string }>();
   const navigate = useNavigate();
   const { purchasedProductIds } = useQuizStore();
-  const { data: product, isLoading } = useProduct(productId ?? '');
+  const { data: products, isLoading } = useProducts();
+  const product = products?.find((p) => p.id === productId) ?? null;
 
   const hasAccess = productId ? purchasedProductIds.includes(productId) : false;
 
   useEffect(() => {
+    if (productId === 'noalert_1') { navigate('/course/basic', { replace: true }); return; }
     if (!isLoading && !hasAccess) navigate('/checkout', { replace: true });
-  }, [isLoading, hasAccess, navigate]);
+  }, [isLoading, hasAccess, productId, navigate]);
 
   useEffect(() => {
     if (!hasAccess || !productId) return;

@@ -1,13 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { useProducts, useCreatePayment } from '../../lib/queries';
+import { useProducts } from '../../lib/queries';
 import { toDisplayProduct } from '../../types/product';
 import { TYPE_TO_PRODUCT_ORDER } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
-import { submitToWayForPay } from '../../utils/wayforpay';
+import { submitToLiqPay } from '../../utils/liqpay';
 import { trackEvent } from '../../utils/analytics';
 import { saveUserEmail } from '../../utils/user';
 
@@ -16,12 +16,12 @@ export function CheckoutPage() {
   const { result, selectedProductId, setSelectedProductId, addPurchasedProduct } =
     useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
-  const paymentMutation = useCreatePayment();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -50,23 +50,24 @@ export function CheckoutPage() {
     if (!selectedProduct || !name || !email || !phone) return;
 
     setError(null);
+    setSubmitting(true);
     saveUserEmail(email);
-    trackEvent(`purchase_${selectedProduct.id}`, { price: selectedProduct.price });
+    trackEvent('click_pay', { product_id: selectedProduct.id, price: selectedProduct.price });
     addPurchasedProduct(selectedProduct.id);
 
     try {
-      const { formData } = await paymentMutation.mutateAsync({
-        productId: selectedProduct.id,
-        customerEmail: email,
-        customerName: name,
-        customerPhone: phone,
+      await submitToLiqPay({
+        amount: selectedProduct.price,
+        description: selectedProduct.title,
+        orderId: crypto.randomUUID(),
+        resultUrl: `${window.location.origin}/thank-you`,
       });
-      submitToWayForPay(formData);
     } catch (err) {
       trackEvent('payment_fail', { product_id: selectedProduct.id });
       setError(
         err instanceof Error ? err.message : 'Помилка при переході до оплати',
       );
+      setSubmitting(false);
     }
   }
 
@@ -174,16 +175,16 @@ export function CheckoutPage() {
                 !email ||
                 !phone ||
                 !agreedToTerms ||
-                paymentMutation.isPending
+                submitting
               }
             >
-              {paymentMutation.isPending
+              {submitting
                 ? 'Переходимо до оплати...'
                 : `Оплатити ${selectedProduct?.price ? `${selectedProduct.price} грн` : ''}`}
             </Button>
 
             <p className="text-center text-white/30 text-xs">
-              Оплата захищена WayForPay. Це не медпослуга. Не замінює звернення
+              Оплата захищена LiqPay. Це не медпослуга. Не замінює звернення
               до лікаря.
             </p>
           </form>

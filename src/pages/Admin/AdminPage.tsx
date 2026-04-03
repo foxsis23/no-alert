@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { fetchOrders, fetchAnalyticsSummary, fetchProducts } from '../../lib/api';
-import { apiClient } from '../../lib/apiClient';
+import { fetchOrders, fetchAnalyticsSummary, fetchProducts, updateProduct, deleteProduct } from '../../lib/api';
+import type { UpdateProductRequest } from '../../types/api';
 import type { OrderStatus, EventSummary, ApiProduct } from '../../types/api';
 
 const RESULT_TYPE_LABELS: Record<string, string> = {
@@ -199,49 +199,157 @@ function OrdersTab({ orders, products }: { orders: OrderStatus[]; products: ApiP
 
 // ── Products Tab ──────────────────────────────────────────────────────────────
 
+const EMPTY_EDIT: UpdateProductRequest = { title: '', description: '', price: '', videoUrl: '', isActive: true, order: 1 };
+
 function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; products: ApiProduct[]; onRefresh: () => void }) {
   const [saving, setSaving] = useState<string | null>(null);
-  const [saved, setSaved] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<UpdateProductRequest>(EMPTY_EDIT);
 
-  async function toggleActive(product: ApiProduct) {
-    setSaving(product.id);
+  function startEdit(product: ApiProduct) {
+    setEditingId(product.id);
+    setEditForm({
+      title: product.title,
+      description: product.description,
+      price: product.price,
+      videoUrl: product.videoUrl ?? '',
+      isActive: product.isActive,
+      order: product.order,
+    });
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditForm(EMPTY_EDIT);
+  }
+
+  async function saveEdit(productId: string) {
+    setSaving(productId);
     try {
-      await apiClient.patch(`/products/${product.id}`, {
-        isActive: !product.isActive,
-      }, {
-        headers: { 'x-admin-key': adminKey },
-      });
-      setSaved(product.id);
-      setTimeout(() => setSaved(null), 2000);
+      await updateProduct(productId, adminKey, editForm);
+      setEditingId(null);
       onRefresh();
     } finally {
       setSaving(null);
     }
   }
 
+  async function handleDelete(productId: string) {
+    if (!confirm('Видалити продукт?')) return;
+    setSaving(productId);
+    try {
+      await deleteProduct(productId, adminKey);
+      onRefresh();
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  const inputCls = 'w-full bg-white/5 border border-white/15 rounded-lg px-3 py-2 text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#f5a623]/50 transition-colors';
+
   return (
     <div className="flex flex-col gap-4">
       {products.map((product) => (
         <div
           key={product.id}
-          className={`bg-white/5 border rounded-2xl p-5 flex items-center justify-between gap-4 ${!product.isActive ? 'border-white/5 opacity-60' : 'border-white/10'}`}
+          className={`bg-white/5 border rounded-2xl p-5 flex flex-col gap-4 ${!product.isActive ? 'border-white/5 opacity-60' : 'border-white/10'}`}
         >
-          <div>
-            <p className="text-white font-semibold">{product.title}</p>
-            <p className="text-white/40 text-sm">{product.price} грн</p>
-            <p className="text-white/30 text-xs font-mono mt-1">{product.id}</p>
-          </div>
-          <button
-            onClick={() => void toggleActive(product)}
-            disabled={saving === product.id}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-              product.isActive
-                ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30'
-                : 'bg-white/10 text-white/40 border border-white/10 hover:bg-white/15'
-            }`}
-          >
-            {saving === product.id ? '...' : saved === product.id ? '✓' : product.isActive ? 'Активний' : 'Вимкнено'}
-          </button>
+          {editingId === product.id ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/40 text-xs">Назва</label>
+                  <input
+                    className={inputCls}
+                    value={editForm.title ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, title: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/40 text-xs">Ціна (грн)</label>
+                  <input
+                    className={inputCls}
+                    value={editForm.price ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, price: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-white/40 text-xs">Опис</label>
+                  <textarea
+                    className={`${inputCls} resize-none`}
+                    rows={3}
+                    value={editForm.description ?? ''}
+                    onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/40 text-xs">Video URL</label>
+                  <input
+                    className={inputCls}
+                    value={editForm.videoUrl ?? ''}
+                    placeholder="https://..."
+                    onChange={(e) => setEditForm((f) => ({ ...f, videoUrl: e.target.value }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="text-white/40 text-xs">Порядок</label>
+                  <input
+                    type="number"
+                    className={inputCls}
+                    value={editForm.order ?? 1}
+                    onChange={(e) => setEditForm((f) => ({ ...f, order: Number(e.target.value) }))}
+                  />
+                </div>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={editForm.isActive ?? true}
+                    onChange={(e) => setEditForm((f) => ({ ...f, isActive: e.target.checked }))}
+                    className="w-4 h-4 accent-[#f5a623]"
+                  />
+                  <span className="text-white/60 text-sm">Активний</span>
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void saveEdit(product.id)}
+                  disabled={saving === product.id}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#f5a623] text-black hover:bg-[#f5a623]/90 disabled:opacity-40 transition-colors"
+                >
+                  {saving === product.id ? 'Зберігаємо...' : 'Зберегти'}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 text-white/60 hover:bg-white/15 transition-colors"
+                >
+                  Скасувати
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-white font-semibold">{product.title}</p>
+                <p className="text-white/40 text-sm">{product.price} грн · порядок {product.order}</p>
+                <p className="text-white/30 text-xs font-mono mt-1">{product.id}</p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => startEdit(product)}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white/60 hover:bg-white/15 transition-colors"
+                >
+                  Редагувати
+                </button>
+                <button
+                  onClick={() => void handleDelete(product.id)}
+                  disabled={saving === product.id}
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-40 transition-colors"
+                >
+                  {saving === product.id ? '...' : 'Видалити'}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       ))}
     </div>
