@@ -92,7 +92,7 @@ export function CourseBasicPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={togglePlay}
-                  className="w-14 h-14 rounded-full bg-[#f5a623] hover:bg-[#f5a623]/80 text-[#0d0d1a] flex items-center justify-center shrink-0 transition-colors"
+                  className="w-14 h-14 rounded-full bg-[#f5a623] hover:bg-[#f5a623]/80 text-[#0d0d1a] flex items-center justify-center shrink-0 cursor-pointer transition-colors"
                 >
                   {isPlaying ? (
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">

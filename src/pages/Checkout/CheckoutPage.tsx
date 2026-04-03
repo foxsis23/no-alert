@@ -13,7 +13,7 @@ import { saveUserEmail } from '../../utils/user';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
-  const { result, selectedProductId, setSelectedProductId, addPurchasedProduct } =
+  const { result, selectedProductId, setSelectedProductId } =
     useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
 
@@ -24,23 +24,23 @@ export function CheckoutPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!result) navigate('/', { replace: true });
-  }, [result, navigate]);
-
   const products = useMemo(
     () => (apiProducts ?? []).map((p, i) => toDisplayProduct(p, i)),
     [apiProducts],
   );
 
-  // Auto-select recommended product
+  // Auto-select: use recommended product if quiz was taken, otherwise first product
   useEffect(() => {
-    if (!result || !apiProducts?.length) return;
+    if (!apiProducts?.length) return;
     if (selectedProductId && apiProducts.some((p) => p.id === selectedProductId)) return;
 
-    const recommendedOrder = TYPE_TO_PRODUCT_ORDER[result.type];
-    const recommended = apiProducts.find((p) => p.order === recommendedOrder);
-    setSelectedProductId(recommended?.id ?? apiProducts[0].id);
+    if (result) {
+      const recommendedOrder = TYPE_TO_PRODUCT_ORDER[result.type];
+      const recommended = apiProducts.find((p) => p.order === recommendedOrder);
+      setSelectedProductId(recommended?.id ?? apiProducts[0].id);
+    } else {
+      setSelectedProductId(apiProducts[0].id);
+    }
   }, [result, apiProducts, selectedProductId, setSelectedProductId]);
 
   const selectedProduct = products.find((p) => p.id === selectedProductId) ?? null;
@@ -53,14 +53,20 @@ export function CheckoutPage() {
     setSubmitting(true);
     saveUserEmail(email);
     trackEvent('click_pay', { product_id: selectedProduct.id, price: selectedProduct.price });
-    addPurchasedProduct(selectedProduct.id);
 
     try {
+      const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://apimedsys.com.ua';
+      const siteHost = import.meta.env.VITE_SITE_HOST;
+      const resultOrigin = siteHost ? `https://${siteHost}` : window.location.origin;
+
       await submitToLiqPay({
-        amount: selectedProduct.price,
+        amount: String(selectedProduct.price),
         description: selectedProduct.title,
         orderId: crypto.randomUUID(),
-        resultUrl: `${window.location.origin}/thank-you`,
+        resultUrl: `${resultOrigin}/thank-you`,
+        serverUrl: `${apiBase}/payments/liqpay-callback`,
+        productId: selectedProduct.id,
+        email,
       });
     } catch (err) {
       trackEvent('payment_fail', { product_id: selectedProduct.id });
@@ -186,6 +192,17 @@ export function CheckoutPage() {
             <p className="text-center text-white/30 text-xs">
               Оплата захищена LiqPay. Це не медпослуга. Не замінює звернення
               до лікаря.
+            </p>
+
+            <p className="text-center text-white/30 text-xs">
+              Вже купляли раніше?{' '}
+              <button
+                type="button"
+                onClick={() => navigate('/my-materials')}
+                className="text-[#f5a623]/70 hover:text-[#f5a623] underline cursor-pointer transition-colors"
+              >
+                Відновити доступ
+              </button>
             </p>
           </form>
         </div>

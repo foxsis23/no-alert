@@ -6,7 +6,7 @@ import { toDisplayProduct } from '../../../types/product';
 
 export function Pricing() {
   const navigate = useNavigate();
-  const { purchasedProductIds } = useQuizStore();
+  const { purchasedProductIds, setSelectedProductId } = useQuizStore();
   const { data: apiProducts } = useProducts();
 
   const products = useMemo(
@@ -24,7 +24,11 @@ export function Pricing() {
             return (
               <button
                 key={product.id}
-                onClick={() => navigate(purchased ? `/course/${product.id}` : '/checkout')}
+                onClick={() => {
+                  if (purchased) { navigate(`/course/${product.id}`); return; }
+                  setSelectedProductId(product.id);
+                  navigate('/checkout');
+                }}
                 className={`relative rounded-xl overflow-hidden text-left transition-transform hover:scale-[1.02] cursor-pointer w-full sm:w-52 ${
                   product.isHighlighted ? 'ring-2 ring-[#e53e3e]' : ''
                 } ${purchased ? 'ring-2 ring-[#f5a623]' : ''}`}

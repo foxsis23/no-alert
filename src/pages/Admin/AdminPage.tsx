@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import { fetchOrders, fetchAnalyticsSummary, fetchProducts, updateProduct, deleteProduct } from '../../lib/api';
 import type { UpdateProductRequest } from '../../types/api';
 import type { OrderStatus, EventSummary, ApiProduct } from '../../types/api';
@@ -85,7 +86,7 @@ function LoginScreen({ onLogin }: { onLogin: (key: string) => void }) {
           <button
             type="submit"
             disabled={loading || !adminKey}
-            className="w-full bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 text-black font-bold py-3 rounded-xl transition-colors"
+            className="w-full bg-[#f5a623] hover:bg-[#f5a623]/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer text-black font-bold py-3 rounded-xl transition-colors"
           >
             {loading ? 'Перевірка...' : 'Увійти'}
           </button>
@@ -229,6 +230,9 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
       await updateProduct(productId, adminKey, editForm);
       setEditingId(null);
       onRefresh();
+      toast.success('Продукт збережено');
+    } catch {
+      toast.error('Помилка збереження');
     } finally {
       setSaving(null);
     }
@@ -240,6 +244,9 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
     try {
       await deleteProduct(productId, adminKey);
       onRefresh();
+      toast.success('Продукт видалено');
+    } catch {
+      toast.error('Помилка видалення');
     } finally {
       setSaving(null);
     }
@@ -314,13 +321,13 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
                 <button
                   onClick={() => void saveEdit(product.id)}
                   disabled={saving === product.id}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#f5a623] text-black hover:bg-[#f5a623]/90 disabled:opacity-40 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#f5a623] text-black hover:bg-[#f5a623]/90 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
                   {saving === product.id ? 'Зберігаємо...' : 'Зберегти'}
                 </button>
                 <button
                   onClick={cancelEdit}
-                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 text-white/60 hover:bg-white/15 transition-colors"
+                  className="px-4 py-2 rounded-xl text-sm font-semibold bg-white/10 text-white/60 hover:bg-white/15 cursor-pointer transition-colors"
                 >
                   Скасувати
                 </button>
@@ -336,14 +343,14 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => startEdit(product)}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white/60 hover:bg-white/15 transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white/60 hover:bg-white/15 cursor-pointer transition-colors"
                 >
                   Редагувати
                 </button>
                 <button
                   onClick={() => void handleDelete(product.id)}
                   disabled={saving === product.id}
-                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-40 transition-colors"
+                  className="px-3 py-1.5 rounded-lg text-sm font-medium bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
                   {saving === product.id ? '...' : 'Видалити'}
                 </button>
@@ -449,7 +456,7 @@ export function AdminPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
                     activeTab === tab
                       ? 'bg-white/10 text-white'
                       : 'text-white/40 hover:text-white/60'
@@ -461,7 +468,7 @@ export function AdminPage() {
             </nav>
             <button
               onClick={handleLogout}
-              className="text-white/30 hover:text-white/60 text-sm transition-colors"
+              className="text-white/30 hover:text-white/60 text-sm cursor-pointer transition-colors"
             >
               Вийти
             </button>

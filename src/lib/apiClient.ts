@@ -8,6 +8,25 @@ const apiClient = axios.create({
   },
 });
 
+apiClient.interceptors.request.use((config) => {
+  // Lazily import to avoid circular deps — sessionStore imports nothing from apiClient
+  const token: string | null = (() => {
+    try {
+      const raw = localStorage.getItem('session-store');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw) as { state?: { sessionToken?: string } };
+      return parsed?.state?.sessionToken ?? null;
+    } catch {
+      return null;
+    }
+  })();
+
+  if (token && !config.headers['Authorization']) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
+  return config;
+});
+
 apiClient.interceptors.response.use(
   (response) => {
     const body = response.data;

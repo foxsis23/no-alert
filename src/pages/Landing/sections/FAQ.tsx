@@ -41,7 +41,7 @@ export function FAQ() {
             >
               <button
                 onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 hover:bg-white/5 transition-colors"
+                className="w-full text-left px-6 py-4 flex items-center justify-between gap-4 cursor-pointer hover:bg-white/5 transition-colors"
               >
                 <span className="text-white font-semibold text-base">{item.question}</span>
                 <span

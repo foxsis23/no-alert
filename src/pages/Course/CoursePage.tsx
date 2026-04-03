@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { useQuizStore } from '../../store/quizStore';
@@ -46,14 +45,6 @@ export function CoursePage() {
     if (!isLoading && !hasAccess) navigate('/checkout', { replace: true });
   }, [isLoading, hasAccess, productId, navigate]);
 
-  useEffect(() => {
-    if (!hasAccess || !productId) return;
-    const key = `toast_shown_${productId}`;
-    if (!sessionStorage.getItem(key)) {
-      toast.success('Ви отримали доступ до курсу!');
-      sessionStorage.setItem(key, '1');
-    }
-  }, [hasAccess, productId]);
 
   if (isLoading || !hasAccess || !product) return null;
 

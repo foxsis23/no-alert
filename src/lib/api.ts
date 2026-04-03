@@ -66,13 +66,20 @@ export async function createSession(
   const { data } = await apiClient.post<{
     session_token: string;
     expires_at: string;
-    product_ids: string[];
+    productIds: string[];
   }>('/auth/session', req);
   return {
     sessionToken: data.session_token,
     expiresAt: data.expires_at,
-    productIds: data.product_ids,
+    productIds: data.productIds ?? [],
   };
+}
+
+export async function fetchMe(token: string): Promise<string[]> {
+  const { data } = await apiClient.get<{ product_ids: string[] }>('/auth/me', {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return Array.isArray(data.product_ids) ? data.product_ids : [];
 }
 
 export async function fetchAnalyticsSummary(

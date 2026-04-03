@@ -18,6 +18,9 @@ export interface LiqPayParams {
   description: string;
   orderId: string;
   resultUrl: string;
+  serverUrl: string;
+  productId: string;
+  email: string;
   currency?: string;
 }
 
@@ -34,7 +37,9 @@ export async function submitToLiqPay(params: LiqPayParams): Promise<void> {
     description: params.description,
     order_id: params.orderId,
     result_url: params.resultUrl,
+    server_url: params.serverUrl,
     language: 'uk',
+    info: JSON.stringify({ product_id: params.productId, customer_email: params.email }),
   };
 
   const data = encodeBase64(JSON.stringify(dataObj));

@@ -90,7 +90,6 @@ export const useQuizStore = create<QuizState & QuizActions>()(
       partialize: (state) => ({
         result: state.result,
         selectedProductId: state.selectedProductId,
-        purchasedProductIds: state.purchasedProductIds,
       }),
     },
   ),
