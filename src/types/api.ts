@@ -68,3 +68,14 @@ export interface EventSummary {
   event: string;
   count: number;
 }
+
+export interface CreateSessionRequest {
+  email: string;
+}
+
+// Backend returns snake_case field names; mapper in createSession converts to camelCase
+export interface CreateSessionResponse {
+  sessionToken: string;
+  expiresAt: string;
+  productIds: string[];
+}

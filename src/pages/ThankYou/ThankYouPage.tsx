@@ -9,7 +9,7 @@ import { trackEvent } from '../../utils/analytics';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { result, selectedProductId, setSelectedProductId, addPurchasedProduct, reset } =
+  const { result, selectedProductId, setSelectedProductId, addPurchasedProduct, resetQuiz } =
     useQuizStore();
   const { data: apiProducts } = useProducts();
 
@@ -40,7 +40,7 @@ export function ThankYouPage() {
   }
 
   function handleRestart() {
-    reset();
+    resetQuiz();
     navigate('/');
   }
 

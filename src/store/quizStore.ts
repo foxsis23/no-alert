@@ -19,6 +19,11 @@ interface QuizActions {
   computeResult: () => void;
   setSelectedProductId: (id: string) => void;
   addPurchasedProduct: (id: string) => void;
+  /** Replace purchasedProductIds with the given list (used by session replace-mode). */
+  setProductIds: (ids: string[]) => void;
+  /** Reset quiz progress only — preserves purchasedProductIds. Use instead of reset() for normal quiz retake. */
+  resetQuiz: () => void;
+  /** Full factory reset including purchasedProductIds. Use only when explicitly clearing all state. */
   reset: () => void;
 }
 
@@ -64,6 +69,17 @@ export const useQuizStore = create<QuizState & QuizActions>()(
           purchasedProductIds: state.purchasedProductIds.includes(id)
             ? state.purchasedProductIds
             : [...state.purchasedProductIds, id],
+        })),
+
+      setProductIds: (ids) => set({ purchasedProductIds: ids }),
+
+      resetQuiz: () =>
+        set((state) => ({
+          answers: new Array(QUIZ_QUESTIONS.length).fill(-1),
+          currentQuestion: 0,
+          result: null,
+          selectedProductId: null,
+          purchasedProductIds: state.purchasedProductIds,
         })),
 
       reset: () => set(initialState),
