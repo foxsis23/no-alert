@@ -1,9 +1,10 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://apimedsys.com.ua',
   headers: {
     'Content-Type': 'application/json',
+    'x-forwarded-host': import.meta.env.VITE_SITE_HOST || 'no-alert.net',
   },
 });
 
