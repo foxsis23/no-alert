@@ -56,8 +56,7 @@ export function CheckoutPage() {
 
     try {
       const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://apimedsys.com.ua';
-      const siteHost = import.meta.env.VITE_SITE_HOST;
-      const resultOrigin = siteHost ? `https://${siteHost}` : window.location.origin;
+      const resultOrigin = 'https://www.xn--80adds5ajn.net';
 
       await submitToLiqPay({
         amount: String(selectedProduct.price),
