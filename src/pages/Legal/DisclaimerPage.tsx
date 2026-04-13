@@ -59,12 +59,14 @@ export function DisclaimerPage() {
 
             <section>
               <h2 className="font-bold text-white mb-2">5. Обмеження відповідальності</h2>
-              <p>ТОВ «Медичні системи» не несе відповідальності за наслідки застосування інформаційних матеріалів сервісу без попередньої консультації з медичним фахівцем.</p>
+              <p>ТОВ «Фінанс-сервіс» не несе відповідальності за наслідки застосування інформаційних матеріалів сервісу без попередньої консультації з медичним фахівцем.</p>
             </section>
 
             <section>
               <h2 className="font-bold text-white mb-2">Контакти</h2>
-              <p>З питань: <a href="mailto:info@tryvoga.net" className="text-[#f5a623] hover:underline">info@tryvoga.net</a></p>
+              <p className="mb-1"><strong className="text-white">ТОВ «Фінанс-сервіс»</strong></p>
+              <p className="mb-1">Тел.: <a href="tel:+380683493855" className="text-[#f5a623] hover:underline">(068) 349-38-55</a>, <a href="tel:+380958254508" className="text-[#f5a623] hover:underline">(095) 825-45-08</a></p>
+              <p>Електронна пошта: <a href="mailto:info@fins.com.ua" className="text-[#f5a623] hover:underline">info@fins.com.ua</a></p>
             </section>
 
           </div>

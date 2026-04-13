@@ -21,7 +21,7 @@ export function Footer() {
         </Link>
         <span>|</span>
         <span>© тривога.net</span>
-        <span>ТОВ «Медичні системи»</span>
+        <span>ТОВ «Фінанс-сервіс»</span>
       </div>
     </footer>
   );

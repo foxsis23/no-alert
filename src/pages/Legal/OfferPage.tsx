@@ -20,9 +20,14 @@ export function OfferPage() {
 
             <section>
               <h2 className="font-bold text-white mb-2">1. Загальні положення</h2>
-              <p className="mb-1">1.1. Цей документ є публічною офертою ТОВ «Медичні системи» (далі — Виконавець) на надання інформаційно-освітніх послуг через сайт https://www.тривога.net/ (далі — Сайт).</p>
+              <p className="mb-1">1.1. Цей документ є публічною офертою ТОВ «Фінанс-сервіс» (далі — Виконавець) на надання інформаційно-освітніх послуг через сайт https://www.тривога.net/ (далі — Сайт).</p>
               <p className="mb-1">1.2. Акцептом цієї оферти є факт оплати послуги Замовником. З моменту оплати між Виконавцем і Замовником укладається договір на умовах цієї оферти.</p>
-              <p>1.3. Виконавець: ТОВ «Медичні системи», електронна пошта: <a href="mailto:info@tryvoga.net" className="text-[#f5a623] hover:underline">info@tryvoga.net</a></p>
+              <p className="mb-1">1.3. Виконавець: ТОВ «Фінанс-сервіс»</p>
+              <p className="mb-1">ЄДРПОУ: 35380629</p>
+              <p className="mb-1">Юридична адреса: 03189, м. Київ, вул. Академіка Вільямса, буд. 6-Д, офіс 43</p>
+              <p className="mb-1">Фактична адреса: 02100, м. Київ, вул. Георгія Тороповського, 14</p>
+              <p className="mb-1">Тел.: <a href="tel:+380683493855" className="text-[#f5a623] hover:underline">(068) 349-38-55</a>, <a href="tel:+380958254508" className="text-[#f5a623] hover:underline">(095) 825-45-08</a></p>
+              <p>Електронна пошта: <a href="mailto:info@fins.com.ua" className="text-[#f5a623] hover:underline">info@fins.com.ua</a></p>
             </section>
 
             <section>
@@ -64,7 +69,12 @@ export function OfferPage() {
 
             <section>
               <h2 className="font-bold text-white mb-2">8. Контакти</h2>
-              <p>Електронна пошта: <a href="mailto:info@tryvoga.net" className="text-[#f5a623] hover:underline">info@tryvoga.net</a></p>
+              <p className="mb-1"><strong className="text-white">ТОВ «Фінанс-сервіс»</strong></p>
+              <p className="mb-1">ЄДРПОУ: 35380629</p>
+              <p className="mb-1">Юридична адреса: 03189, м. Київ, вул. Академіка Вільямса, буд. 6-Д, офіс 43</p>
+              <p className="mb-1">Фактична адреса: 02100, м. Київ, вул. Георгія Тороповського, 14</p>
+              <p className="mb-1">Тел.: <a href="tel:+380683493855" className="text-[#f5a623] hover:underline">(068) 349-38-55</a>, <a href="tel:+380958254508" className="text-[#f5a623] hover:underline">(095) 825-45-08</a></p>
+              <p>Електронна пошта: <a href="mailto:info@fins.com.ua" className="text-[#f5a623] hover:underline">info@fins.com.ua</a></p>
             </section>
 
           </div>
