@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FaCcVisa, FaCcMastercard } from 'react-icons/fa';
 
 export function Footer() {
   return (
@@ -22,6 +23,10 @@ export function Footer() {
         <span>|</span>
         <span>© тривога.net</span>
         <span>ТОВ «Фінанс-сервіс»</span>
+      </div>
+      <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 mt-4">
+        <FaCcVisa className="text-white/30 text-4xl" />
+        <FaCcMastercard className="text-white/30 text-4xl" />
       </div>
     </footer>
   );
