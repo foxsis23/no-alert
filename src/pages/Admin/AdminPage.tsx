@@ -200,12 +200,13 @@ function OrdersTab({ orders, products }: { orders: OrderStatus[]; products: ApiP
 
 // ── Products Tab ──────────────────────────────────────────────────────────────
 
-const EMPTY_EDIT: UpdateProductRequest = { title: '', description: '', price: '', videoUrl: '', isActive: true, order: 1 };
+const EMPTY_EDIT: UpdateProductRequest = { title: '', description: '', price: '', videoUrls: [], isActive: true, order: 1 };
 
 function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; products: ApiProduct[]; onRefresh: () => void }) {
   const [saving, setSaving] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<UpdateProductRequest>(EMPTY_EDIT);
+  const [videoUrlsText, setVideoUrlsText] = useState('');
 
   function startEdit(product: ApiProduct) {
     setEditingId(product.id);
@@ -213,21 +214,24 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
       title: product.title,
       description: product.description,
       price: product.price,
-      videoUrl: product.videoUrl ?? '',
+      videoUrls: product.videoUrls ?? [],
       isActive: product.isActive,
       order: product.order,
     });
+    setVideoUrlsText((product.videoUrls ?? []).join('\n'));
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditForm(EMPTY_EDIT);
+    setVideoUrlsText('');
   }
 
   async function saveEdit(productId: string) {
     setSaving(productId);
+    const urls = videoUrlsText.split('\n').map((u) => u.trim()).filter(Boolean);
     try {
-      await updateProduct(productId, adminKey, editForm);
+      await updateProduct(productId, adminKey, { ...editForm, videoUrls: urls });
       setEditingId(null);
       onRefresh();
       toast.success('Продукт збережено');
@@ -289,13 +293,16 @@ function ProductsTab({ adminKey, products, onRefresh }: { adminKey: string; prod
                     onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}
                   />
                 </div>
-                <div className="flex flex-col gap-1">
-                  <label className="text-white/40 text-xs">Video URL</label>
-                  <input
-                    className={inputCls}
-                    value={editForm.videoUrl ?? ''}
-                    placeholder="https://..."
-                    onChange={(e) => setEditForm((f) => ({ ...f, videoUrl: e.target.value }))}
+                <div className="flex flex-col gap-1 sm:col-span-2">
+                  <label className="text-white/40 text-xs">
+                    Video URLs <span className="text-white/20">(по одному на рядок)</span>
+                  </label>
+                  <textarea
+                    className={`${inputCls} resize-none font-mono text-xs`}
+                    rows={4}
+                    value={videoUrlsText}
+                    placeholder={"https://youtu.be/...\nhttps://youtu.be/..."}
+                    onChange={(e) => setVideoUrlsText(e.target.value)}
                   />
                 </div>
                 <div className="flex flex-col gap-1">

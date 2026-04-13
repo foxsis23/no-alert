@@ -14,7 +14,7 @@ export interface ApiProduct {
   title: string;
   description: string;
   price: string;
-  videoUrl: string | null;
+  videoUrls: string[] | null;
   isActive: boolean;
   order: number;
   createdAt: string;
@@ -73,7 +73,7 @@ export interface UpdateProductRequest {
   title?: string;
   description?: string;
   price?: string;
-  videoUrl?: string;
+  videoUrls?: string[];
   isActive?: boolean;
   order?: number;
 }
