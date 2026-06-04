@@ -23,6 +23,7 @@ export function Footer() {
         <span>|</span>
         <span>© тривога.net</span>
         <span>ТОВ «Фінанс-сервіс»</span>
+        <span>03150, м. Київ, вул. Академіка Вільямса, 6-д, оф. 43</span>
       </div>
       <div className="max-w-4xl mx-auto flex items-center justify-center gap-3 mt-4">
         <FaCcVisa className="text-white/30 text-4xl" />
