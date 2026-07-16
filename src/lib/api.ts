@@ -3,6 +3,7 @@ import type {
   ApiProduct,
   CreatePaymentRequest,
   CreatePaymentResponse,
+  CreateHutkoPaymentResponse,
   UpdateProductRequest,
   TrackEventRequest,
   OrderStatus,
@@ -26,6 +27,16 @@ export async function createPayment(
 ): Promise<CreatePaymentResponse> {
   const { data } = await apiClient.post<CreatePaymentResponse>(
     '/payments/create',
+    req,
+  );
+  return data;
+}
+
+export async function createHutkoPayment(
+  req: CreatePaymentRequest,
+): Promise<CreateHutkoPaymentResponse> {
+  const { data } = await apiClient.post<CreateHutkoPaymentResponse>(
+    '/payments/hutko/create',
     req,
   );
   return data;

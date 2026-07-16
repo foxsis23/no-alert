@@ -47,6 +47,11 @@ export interface CreatePaymentResponse {
   formData: WayForPayFormData;
 }
 
+export interface CreateHutkoPaymentResponse {
+  orderId: string;
+  checkoutUrl: string;
+}
+
 export interface TrackEventRequest {
   event: string;
   metadata?: Record<string, unknown>;

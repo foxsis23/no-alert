@@ -1,13 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { useProducts } from '../../lib/queries';
+import { useProducts, useCreateHutkoPayment } from '../../lib/queries';
 import { toDisplayProduct } from '../../types/product';
 import { TYPE_TO_PRODUCT_ORDER } from '../../data/products';
 import { Header } from '../../components/layout/Header';
 import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
-import { submitToLiqPay } from '../../utils/liqpay';
 import { trackEvent } from '../../utils/analytics';
 import { saveUserEmail } from '../../utils/user';
 
@@ -16,6 +15,7 @@ export function CheckoutPage() {
   const { result, selectedProductId, setSelectedProductId } =
     useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
+  const createHutkoPayment = useCreateHutkoPayment();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -55,18 +55,13 @@ export function CheckoutPage() {
     trackEvent('click_pay', { product_id: selectedProduct.id, price: selectedProduct.price });
 
     try {
-      const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://apimedsys.com.ua';
-      const resultOrigin = 'https://www.xn--80adds5ajn.net';
-
-      await submitToLiqPay({
-        amount: String(selectedProduct.price),
-        description: selectedProduct.title,
-        orderId: crypto.randomUUID(),
-        resultUrl: `${resultOrigin}/thank-you`,
-        serverUrl: `${apiBase}/payments/liqpay-callback`,
+      const { checkoutUrl } = await createHutkoPayment.mutateAsync({
         productId: selectedProduct.id,
-        email,
+        customerEmail: email,
+        customerName: name,
+        customerPhone: phone,
       });
+      window.location.href = checkoutUrl;
     } catch (err) {
       trackEvent('payment_fail', { product_id: selectedProduct.id });
       setError(
@@ -189,7 +184,7 @@ export function CheckoutPage() {
             </Button>
 
             <p className="text-center text-white/30 text-xs">
-              Оплата захищена LiqPay. Це не медпослуга. Не замінює звернення
+              Оплата захищена Hutko. Це не медпослуга. Не замінює звернення
               до лікаря.
             </p>
 
