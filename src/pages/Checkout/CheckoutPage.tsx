@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { useProducts, useCreateHutkoPayment } from '../../lib/queries';
+import { useProducts, useCreateHutkoPayment, useCreateHutkoTestPayment } from '../../lib/queries';
 import { toDisplayProduct } from '../../types/product';
 import { TYPE_TO_PRODUCT_ORDER } from '../../data/products';
 import { Header } from '../../components/layout/Header';
@@ -9,6 +9,7 @@ import { Button } from '../../components/ui/Button';
 import { ProductCard } from './ProductCard';
 import { trackEvent } from '../../utils/analytics';
 import { saveUserEmail } from '../../utils/user';
+import { pollOrderStatus, type PollHandle } from '../../utils/pollOrderStatus';
 
 export function CheckoutPage() {
   const navigate = useNavigate();
@@ -16,13 +17,22 @@ export function CheckoutPage() {
     useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
   const createHutkoPayment = useCreateHutkoPayment();
+  const createHutkoTestPayment = useCreateHutkoTestPayment();
+  const testMode =
+    import.meta.env.VITE_HUTKO_TEST === '1' ||
+    import.meta.env.VITE_HUTKO_TEST === 'true';
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [awaitingPayment, setAwaitingPayment] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const pollRef = useRef<PollHandle | null>(null);
+
+  // Stop polling if the user leaves the page.
+  useEffect(() => () => pollRef.current?.cancel(), []);
 
   const products = useMemo(
     () => (apiProducts ?? []).map((p, i) => toDisplayProduct(p, i)),
@@ -54,16 +64,50 @@ export function CheckoutPage() {
     saveUserEmail(email);
     trackEvent('click_pay', { product_id: selectedProduct.id, price: selectedProduct.price });
 
+    // Open the checkout tab synchronously (inside the click gesture) so it is
+    // not popup-blocked; we fill its URL once the backend returns checkoutUrl.
+    // Keeping this tab alive lets us poll the order status, which is the only
+    // way the desktop learns about a QR payment completed on another device.
+    const payWindow = window.open('', '_blank');
+    const productId = selectedProduct.id;
+
     try {
-      const { checkoutUrl } = await createHutkoPayment.mutateAsync({
-        productId: selectedProduct.id,
+      const base = {
+        productId,
         customerEmail: email,
         customerName: name,
         customerPhone: phone,
-      });
-      window.location.href = checkoutUrl;
+      };
+      const { orderId, checkoutUrl } = testMode
+        ? await createHutkoTestPayment.mutateAsync({
+            ...base,
+            responseUrl: `${window.location.origin}/thank-you`,
+          })
+        : await createHutkoPayment.mutateAsync(base);
+
+      if (payWindow) {
+        payWindow.location.href = checkoutUrl;
+        // This tab stays on checkout and polls; QR-on-phone still resolves here.
+        setAwaitingPayment(true);
+        pollRef.current = pollOrderStatus(orderId, (status) => {
+          setAwaitingPayment(false);
+          if (status === 'PAID') {
+            setSelectedProductId(productId);
+            navigate(`/thank-you?order=${orderId}`);
+          } else {
+            trackEvent('payment_fail', { product_id: productId });
+            setError('Оплата не пройшла. Спробуйте ще раз.');
+            setSubmitting(false);
+          }
+        });
+      } else {
+        // Popup blocked — fall back to same-tab redirect (works for same-device
+        // card payments via responseUrl; QR cross-device won't resolve here).
+        window.location.href = checkoutUrl;
+      }
     } catch (err) {
-      trackEvent('payment_fail', { product_id: selectedProduct.id });
+      payWindow?.close();
+      trackEvent('payment_fail', { product_id: productId });
       setError(
         err instanceof Error ? err.message : 'Помилка при переході до оплати',
       );
@@ -79,12 +123,48 @@ export function CheckoutPage() {
     );
   }
 
+  function handleCancelWaiting() {
+    pollRef.current?.cancel();
+    pollRef.current = null;
+    setAwaitingPayment(false);
+    setSubmitting(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#0d0d1a] text-white flex flex-col">
       <Header />
 
+      {awaitingPayment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0d0d1a]/90 px-6">
+          <div className="w-full max-w-sm flex flex-col items-center gap-5 text-center">
+            <div className="w-10 h-10 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
+            <p className="text-white font-semibold text-lg">
+              Очікуємо підтвердження оплати
+            </p>
+            <p className="text-white/50 text-sm">
+              Завершіть оплату у вікні, що відкрилось. Оплата по QR-коду —
+              на телефоні. Не закривайте цю вкладку, доступ відкриється
+              автоматично.
+            </p>
+            <button
+              type="button"
+              onClick={handleCancelWaiting}
+              className="text-white/30 hover:text-white/50 text-sm underline cursor-pointer transition-colors"
+            >
+              Скасувати
+            </button>
+          </div>
+        </div>
+      )}
+
       <main className="flex-1 flex flex-col items-center px-6 py-24">
         <div className="w-full max-w-lg flex flex-col gap-8">
+          {testMode && (
+            <div className="rounded-xl border border-[#f5a623]/40 bg-[#f5a623]/10 px-4 py-2 text-center text-sm font-semibold text-[#f5a623]">
+              Тестовий режим оплати (Fondy sandbox) — кошти не списуються
+            </div>
+          )}
+
           <div className="text-center">
             <h1 className="text-3xl font-black text-white">Оберіть тариф</h1>
             <p className="text-white/50 mt-2">

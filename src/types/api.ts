@@ -27,6 +27,12 @@ export interface CreatePaymentRequest {
   customerPhone: string;
 }
 
+// Test-only checkout via Fondy public sandbox merchant. Accepts an optional
+// responseUrl the sandbox redirects to after payment.
+export interface CreateHutkoTestPaymentRequest extends CreatePaymentRequest {
+  responseUrl?: string;
+}
+
 export interface WayForPayFormData {
   merchantAccount: string;
   merchantDomainName: string;
@@ -50,6 +56,13 @@ export interface CreatePaymentResponse {
 export interface CreateHutkoPaymentResponse {
   orderId: string;
   checkoutUrl: string;
+}
+
+export type OrderPaymentStatus = 'PENDING' | 'PAID' | 'FAILED';
+
+export interface OrderStatusResponse {
+  orderId: string;
+  status: OrderPaymentStatus;
 }
 
 export interface TrackEventRequest {

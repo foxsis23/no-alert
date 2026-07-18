@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { fetchProducts, fetchProduct, createPayment, createHutkoPayment } from './api';
-import type { CreatePaymentRequest } from '../types/api';
+import { fetchProducts, fetchProduct, createPayment, createHutkoPayment, createHutkoTestPayment } from './api';
+import type { CreatePaymentRequest, CreateHutkoTestPaymentRequest } from '../types/api';
 
 export function useProducts() {
   return useQuery({
@@ -28,5 +28,11 @@ export function useCreatePayment() {
 export function useCreateHutkoPayment() {
   return useMutation({
     mutationFn: (req: CreatePaymentRequest) => createHutkoPayment(req),
+  });
+}
+
+export function useCreateHutkoTestPayment() {
+  return useMutation({
+    mutationFn: (req: CreateHutkoTestPaymentRequest) => createHutkoTestPayment(req),
   });
 }

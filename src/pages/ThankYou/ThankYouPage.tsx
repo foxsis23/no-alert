@@ -12,7 +12,7 @@ import { getUserEmail } from '../../utils/user';
 
 export function ThankYouPage() {
   const navigate = useNavigate();
-  const { result, selectedProductId, purchasedProductIds, setSelectedProductId, addPurchasedProduct, resetQuiz } =
+  const { selectedProductId, purchasedProductIds, setSelectedProductId, addPurchasedProduct, resetQuiz } =
     useQuizStore();
   const setSession = useSessionStore((s) => s.setSession);
   const { data: apiProducts } = useProducts();
@@ -23,7 +23,9 @@ export function ThankYouPage() {
   );
 
   useEffect(() => {
-    if (!result) { navigate('/', { replace: true }); return; }
+    // Purchase confirmation must not depend on a quiz result — users can buy
+    // without taking the quiz. Gate on the purchased product instead.
+    if (!selectedProductId) { navigate('/', { replace: true }); return; }
 
     trackEvent('open_delivery', { product_id: selectedProductId });
 
@@ -44,7 +46,7 @@ export function ThankYouPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!result) return null;
+  if (!selectedProductId) return null;
 
   // Upsell logic per TZ:
   // noalert_1 (29 грн) → noalert_3 (7 днів підтримки)

@@ -4,6 +4,8 @@ import type {
   CreatePaymentRequest,
   CreatePaymentResponse,
   CreateHutkoPaymentResponse,
+  CreateHutkoTestPaymentRequest,
+  OrderStatusResponse,
   UpdateProductRequest,
   TrackEventRequest,
   OrderStatus,
@@ -38,6 +40,25 @@ export async function createHutkoPayment(
   const { data } = await apiClient.post<CreateHutkoPaymentResponse>(
     '/payments/hutko/create',
     req,
+  );
+  return data;
+}
+
+export async function createHutkoTestPayment(
+  req: CreateHutkoTestPaymentRequest,
+): Promise<CreateHutkoPaymentResponse> {
+  const { data } = await apiClient.post<CreateHutkoPaymentResponse>(
+    '/payments/hutko/test',
+    req,
+  );
+  return data;
+}
+
+export async function fetchOrderStatus(
+  orderId: string,
+): Promise<OrderStatusResponse> {
+  const { data } = await apiClient.get<OrderStatusResponse>(
+    `/payments/orders/${orderId}/status`,
   );
   return data;
 }
