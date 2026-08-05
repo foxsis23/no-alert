@@ -22,7 +22,7 @@ export function Sofia() {
 
           <div className="flex flex-col items-center sm:items-start text-center sm:text-left gap-4">
             <p className="text-white/80 leading-relaxed">
-              <span className="font-bold text-white">Софія</span> — твій ІІ-психолог у Telegram.
+              <span className="font-bold text-white">Софія</span> — твій ШІ-психолог у Telegram.
               Вислухає, підтримає й допоможе розібратися з тривогою — будь-коли, безкоштовно.
               Просто напиши їй.
             </p>
@@ -38,7 +38,7 @@ export function Sofia() {
             </a>
 
             <p className="text-xs text-white/40 leading-relaxed max-w-md">
-              Софія — ІІ-підтримка, а не заміна професійної психологічної чи медичної допомоги.
+              Софія — ШІ-підтримка, а не заміна професійної психологічної чи медичної допомоги.
               У кризовій ситуації або при загрозі життю звертайтесь до{' '}
               <a href="tel:7333" className="text-white/60 underline hover:text-white/80">
                 Lifeline Ukraine 7333
