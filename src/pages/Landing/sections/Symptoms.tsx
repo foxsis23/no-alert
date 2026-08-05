@@ -5,8 +5,8 @@ const SYMPTOMS = [
   { image: '/sym-heart.webp', label: "Серце б'ється" },
   { image: '/sym-breath.webp', label: 'Важко вдихнути' },
   { image: '/sym-control.webp', label: 'Страх втратити контроль' },
-  { image: '/sym-tremor.webp', label: 'Нудота або тремор' },
-  { image: '/sym-tension.webp', label: 'Постійне напруження' },
+  { image: '/sym-tension.webp', label: 'Нудота або тремор' },
+  { image: '/sym-tremor.webp', label: 'Постійне напруження' },
 ];
 
 export function Symptoms() {
