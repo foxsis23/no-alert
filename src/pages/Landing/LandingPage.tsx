@@ -7,6 +7,8 @@ import { AnxietyTypesBlock } from './sections/AnxietyTypesBlock';
 import { Trust } from './sections/Trust';
 import { ResultExample } from './sections/ResultExample';
 import { Pricing } from './sections/Pricing';
+import { Sofia } from './sections/Sofia';
+import { FloatingSofia } from './sections/FloatingSofia';
 import { NextSteps } from './sections/NextSteps';
 import { FAQ } from './sections/FAQ';
 
@@ -22,10 +24,12 @@ export function LandingPage() {
         <Trust />
         <ResultExample />
         <Pricing />
+        <Sofia />
         <NextSteps />
         <FAQ />
       </main>
       <Footer />
+      <FloatingSofia />
     </div>
   );
 }

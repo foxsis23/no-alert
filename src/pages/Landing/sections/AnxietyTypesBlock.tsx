@@ -1,26 +1,29 @@
-const TYPES = [
+import { Zap, Search, RefreshCw, Gauge, Shuffle } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+
+const TYPES: { Icon: LucideIcon; title: string; description: string }[] = [
   {
-    icon: '⚡',
+    Icon: Zap,
     title: 'Панічний цикл',
     description: 'Раптові напади страху, серцебиття, задишка без видимої причини. Тіло реагує на помилкову загрозу.',
   },
   {
-    icon: '🔍',
+    Icon: Search,
     title: 'Тілесна гіперфіксація',
     description: 'Постійне прислухання до тіла, пошук симптомів, тривога від нормальних відчуттів.',
   },
   {
-    icon: '🔄',
+    Icon: RefreshCw,
     title: 'Страх повторення',
     description: 'Очікування наступного нападу. Уникання місць і ситуацій, де вже було погано.',
   },
   {
-    icon: '🌫️',
+    Icon: Gauge,
     title: 'Фонова напруга',
     description: 'Хронічне напруження без конкретної причини. Складно розслабитись навіть у спокійній обстановці.',
   },
   {
-    icon: '🔀',
+    Icon: Shuffle,
     title: 'Змішана тривога',
     description: 'Кілька видів тривоги одночасно. Стан, що потребує комплексного підходу.',
   },
@@ -38,14 +41,16 @@ export function AnxietyTypesBlock() {
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {TYPES.map((type, i) => (
+          {TYPES.map(({ Icon, title, description }) => (
             <div
-              key={i}
-              className="bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col gap-3 hover:bg-white/8 transition-colors"
+              key={title}
+              className="bg-[#12121f] border border-white/10 rounded-2xl p-6 flex flex-col gap-3 hover:border-[#f5a623]/40 transition-colors"
             >
-              <span className="text-3xl">{type.icon}</span>
-              <h3 className="text-white font-bold text-lg">{type.title}</h3>
-              <p className="text-white/50 text-sm leading-relaxed">{type.description}</p>
+              <div className="flex items-center justify-center w-11 h-11 rounded-xl bg-[#f5a623]/10">
+                <Icon className="w-6 h-6 text-[#f5a623]" strokeWidth={1.75} />
+              </div>
+              <h3 className="text-white font-bold text-lg">{title}</h3>
+              <p className="text-white/50 text-sm leading-relaxed">{description}</p>
             </div>
           ))}
         </div>

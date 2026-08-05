@@ -24,3 +24,32 @@ body {
   background: rgba(255,255,255,0.15);
   border-radius: 3px;
 }
+
+/* Floating Sofia badge — gentle idle bob */
+@keyframes sofia-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.sofia-float {
+  animation: sofia-float 3s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sofia-float { animation: none; }
+}
+
+/* Sofia card attention — expanding amber waves + soft glow */
+@keyframes sofia-wave {
+  0%   { transform: scale(1);   opacity: 0.45; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+.sofia-wave { animation: sofia-wave 2.8s ease-out infinite; }
+
+@keyframes sofia-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
+  50%      { box-shadow: 0 0 32px 2px rgba(245,166,35,0.13); }
+}
+.sofia-glow { animation: sofia-glow 3.4s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sofia-wave, .sofia-glow { animation: none; }
+}
