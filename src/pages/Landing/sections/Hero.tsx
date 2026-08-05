@@ -11,31 +11,34 @@ export function Hero() {
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 overflow-hidden">
-      {/* Dark gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-[#0d0d1a]" />
-
-      {/* Background image */}
+    <section className="relative min-h-screen flex items-center overflow-hidden bg-[#0d0d1a]">
+      {/* Background image (human photo, subject on the right) */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/hero.png')" }}
+        style={{ backgroundImage: "url('/hero.webp')" }}
       />
 
-      <div className="relative z-10 flex flex-col items-center gap-6 max-w-lg">
-        <h1 className="text-6xl md:text-7xl font-black text-white leading-tight">
-          Накриває?
-        </h1>
-        <p className="text-xl text-white/70">
-          Зараз перевіримо, що це.
-        </p>
-        <Button
-          variant="primary"
-          size="lg"
-          onClick={() => { trackEvent('click_cta_hero'); navigate('/test'); }}
-          className="min-w-48 mt-2 text-xl shadow-lg shadow-[#f5a623]/20"
-        >
-          Почати
-        </Button>
+      {/* Left-to-right + bottom gradients keep the left-aligned text readable */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0d0d1a] via-[#0d0d1a]/70 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d1a]/80 via-transparent to-transparent" />
+
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-6 md:px-12">
+        <div className="max-w-lg flex flex-col items-start gap-6 text-left">
+          <h1 className="text-6xl md:text-7xl font-black text-white leading-tight">
+            Накриває?
+          </h1>
+          <p className="text-xl text-white/70">
+            Зараз перевіримо, що це.
+          </p>
+          <Button
+            variant="primary"
+            size="lg"
+            onClick={() => { trackEvent('click_cta_hero'); navigate('/test'); }}
+            className="min-w-48 mt-2 text-xl shadow-lg shadow-[#f5a623]/20"
+          >
+            Почати
+          </Button>
+        </div>
       </div>
     </section>
   );
