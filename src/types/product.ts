@@ -15,9 +15,9 @@ export interface Product {
 }
 
 const IMAGE_BY_ORDER: Record<number, string> = {
-  1: '/pricing1.png',
-  2: '/pricing2.png',
-  3: '/pricing3.png',
+  1: '/price-now.webp',
+  2: '/price-course.webp',
+  3: '/price-support.webp',
 };
 
 export function toDisplayProduct(api: ApiProduct, index: number): Product {
@@ -31,7 +31,7 @@ export function toDisplayProduct(api: ApiProduct, index: number): Product {
     description: api.description,
     isHighlighted: index === 1,
     imagePlaceholder: '#1a1a2e',
-    imageSrc: IMAGE_BY_ORDER[api.order] ?? `/pricing${(index % 3) + 1}.png`,
+    imageSrc: IMAGE_BY_ORDER[api.order] ?? IMAGE_BY_ORDER[(index % 3) + 1],
     hasSupport: false,
     videoUrls: api.videoUrls ?? [],
   };
