@@ -1,5 +1,6 @@
-import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { createGratiaSession } from '../../lib/api';
 import { useProducts } from '../../lib/queries';
 import { toDisplayProduct } from '../../types/product';
 import { Header } from '../../components/layout/Header';
@@ -16,6 +17,30 @@ export function MyMaterialsPage() {
   const sessionExpiresAt = useSessionStore((s) => s.sessionExpiresAt);
   const clearSession = useSessionStore((s) => s.clearSession);
   const setProductIds = useQuizStore((s) => s.setProductIds);
+
+  const setSession = useSessionStore((s) => s.setSession);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [gratiaLogin, setGratiaLogin] = useState(() => searchParams.has('gratia_payment'));
+
+  // Links from the GratiA bot ("Open on the site", "My purchases") carry a
+  // signed login token — exchange it for a session, no email needed.
+  useEffect(() => {
+    const payment = searchParams.get('gratia_payment');
+    const ts = searchParams.get('gratia_ts');
+    const sig = searchParams.get('gratia_sig');
+    if (!payment || !ts || !sig) return;
+
+    setSearchParams({}, { replace: true });
+    createGratiaSession({ payment, ts, sig })
+      .then(({ sessionToken, expiresAt, productIds }) => {
+        setSession(sessionToken, expiresAt, productIds, 'replace');
+      })
+      .catch(() => {
+        // Invalid or expired link — fall back to the email form.
+      })
+      .finally(() => setGratiaLogin(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hasValidSession = isSessionValid(sessionToken, sessionExpiresAt);
 
@@ -46,7 +71,7 @@ export function MyMaterialsPage() {
             <h1 className="text-4xl font-black text-white">Мої покупки</h1>
           </div>
 
-          {isLoading ? (
+          {isLoading || gratiaLogin ? (
             <div className="flex justify-center py-8">
               <div className="w-8 h-8 border-2 border-[#f5a623] border-t-transparent rounded-full animate-spin" />
             </div>

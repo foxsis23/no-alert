@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuizStore } from '../../store/quizStore';
-import { useProducts, useCreateHutkoPayment, useCreateHutkoTestPayment } from '../../lib/queries';
+import { useProducts, useCreateGratiaPayment } from '../../lib/queries';
 import { toDisplayProduct } from '../../types/product';
 import { TYPE_TO_PRODUCT_ORDER } from '../../data/products';
 import { Header } from '../../components/layout/Header';
@@ -16,11 +16,7 @@ export function CheckoutPage() {
   const { result, selectedProductId, setSelectedProductId } =
     useQuizStore();
   const { data: apiProducts, isLoading } = useProducts();
-  const createHutkoPayment = useCreateHutkoPayment();
-  const createHutkoTestPayment = useCreateHutkoTestPayment();
-  const testMode =
-    import.meta.env.VITE_HUTKO_TEST === '1' ||
-    import.meta.env.VITE_HUTKO_TEST === 'true';
+  const createGratiaPayment = useCreateGratiaPayment();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -64,30 +60,24 @@ export function CheckoutPage() {
     saveUserEmail(email);
     trackEvent('click_pay', { product_id: selectedProduct.id, price: selectedProduct.price });
 
-    // Open the checkout tab synchronously (inside the click gesture) so it is
-    // not popup-blocked; we fill its URL once the backend returns checkoutUrl.
-    // Keeping this tab alive lets us poll the order status, which is the only
-    // way the desktop learns about a QR payment completed on another device.
+    // Open the pay tab synchronously (inside the click gesture) so it is not
+    // popup-blocked; we fill its URL (the GratiA bot link) once the backend
+    // returns it. Payment happens in Telegram, possibly on the phone, so this
+    // tab polls the order status to learn when it is paid.
     const payWindow = window.open('', '_blank');
     const productId = selectedProduct.id;
 
     try {
-      const base = {
+      const { orderId, checkoutUrl } = await createGratiaPayment.mutateAsync({
         productId,
         customerEmail: email,
         customerName: name,
         customerPhone: phone,
-      };
-      const { orderId, checkoutUrl } = testMode
-        ? await createHutkoTestPayment.mutateAsync({
-            ...base,
-            responseUrl: `${window.location.origin}/thank-you`,
-          })
-        : await createHutkoPayment.mutateAsync(base);
+      });
 
       if (payWindow) {
         payWindow.location.href = checkoutUrl;
-        // This tab stays on checkout and polls; QR-on-phone still resolves here.
+        // This tab stays on checkout and polls; payment on the phone resolves here.
         setAwaitingPayment(true);
         pollRef.current = pollOrderStatus(orderId, (status) => {
           setAwaitingPayment(false);
@@ -101,8 +91,8 @@ export function CheckoutPage() {
           }
         });
       } else {
-        // Popup blocked — fall back to same-tab redirect (works for same-device
-        // card payments via responseUrl; QR cross-device won't resolve here).
+        // Popup blocked — fall back to same-tab redirect. After paying, the
+        // bot's "Open on the site" button signs the user in on /my-materials.
         window.location.href = checkoutUrl;
       }
     } catch (err) {
@@ -142,9 +132,8 @@ export function CheckoutPage() {
               Очікуємо підтвердження оплати
             </p>
             <p className="text-white/50 text-sm">
-              Завершіть оплату у вікні, що відкрилось. Оплата по QR-коду —
-              на телефоні. Не закривайте цю вкладку, доступ відкриється
-              автоматично.
+              Завершіть оплату в Telegram. Не закривайте цю вкладку — доступ
+              відкриється автоматично.
             </p>
             <button
               type="button"
@@ -159,12 +148,6 @@ export function CheckoutPage() {
 
       <main className="flex-1 flex flex-col items-center px-6 py-24">
         <div className="w-full max-w-lg flex flex-col gap-8">
-          {testMode && (
-            <div className="rounded-xl border border-[#f5a623]/40 bg-[#f5a623]/10 px-4 py-2 text-center text-sm font-semibold text-[#f5a623]">
-              Тестовий режим оплати (Fondy sandbox) — кошти не списуються
-            </div>
-          )}
-
           <div className="text-center">
             <h1 className="text-3xl font-black text-white">Оберіть тариф</h1>
             <p className="text-white/50 mt-2">
@@ -261,11 +244,11 @@ export function CheckoutPage() {
             >
               {submitting
                 ? 'Переходимо до оплати...'
-                : `Оплатити ${selectedProduct?.price ? `${selectedProduct.price} грн` : ''}`}
+                : `Оплатити в Telegram ${selectedProduct?.price ? `${selectedProduct.price} грн` : ''}`}
             </Button>
 
             <p className="text-center text-white/30 text-xs">
-              Оплата захищена Hutko. Це не медпослуга. Не замінює звернення
+              Оплата через Telegram Stars у боті @gratia_app_bot. Це не медпослуга. Не замінює звернення
               до лікаря.
             </p>
 

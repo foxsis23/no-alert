@@ -107,6 +107,34 @@ export async function createSession(
   };
 }
 
+export async function createGratiaPayment(
+  req: CreatePaymentRequest,
+): Promise<CreateHutkoPaymentResponse> {
+  const { data } = await apiClient.post<CreateHutkoPaymentResponse>(
+    '/payments/gratia/create',
+    req,
+  );
+  return data;
+}
+
+// Exchanges the signed login link from the GratiA bot for a session.
+export async function createGratiaSession(req: {
+  payment: string;
+  ts: string;
+  sig: string;
+}): Promise<CreateSessionResponse> {
+  const { data } = await apiClient.post<{
+    session_token: string;
+    expires_at: string;
+    productIds: string[];
+  }>('/payments/gratia/session', req);
+  return {
+    sessionToken: data.session_token,
+    expiresAt: data.expires_at,
+    productIds: data.productIds ?? [],
+  };
+}
+
 export async function fetchMe(token: string): Promise<string[]> {
   const { data } = await apiClient.get<{ product_ids: string[] }>('/auth/me', {
     headers: { Authorization: `Bearer ${token}` },
